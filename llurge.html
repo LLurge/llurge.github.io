@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLurge — Cybersecurity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020806;
+  --s1:#060e09;
+  --s2:#0a160c;
+  --g:#00ff41;
+  --gd:#00c032;
+  --gdd:#007a1f;
+  --gddd:#003d10;
+  --dim:#1a4d23;
+  --muted:#2a6635;
+  --text:#c8ffd4;
+  --mono:'Share Tech Mono',monospace;
+  --sans:'Rajdhani',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);overflow-x:hidden;min-height:100vh}
+
+.scanline{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
+}
+
+/* NAV */
+nav{
+  border-bottom:1px solid var(--gddd);
+  background:var(--bg);
+  position:sticky;top:0;z-index:100;
+}
+.nav-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 4rem;
+  max-width:1100px;
+  margin:0 auto;
+}
+.nav-id{display:flex;align-items:center;gap:0.8rem;font-size:0.8rem;color:var(--g);letter-spacing:0.12em}
+.nav-dot{width:8px;height:8px;background:var(--g);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{font-size:0.7rem;color:var(--muted);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.15s}
+.nav-links a:hover{color:var(--g)}
+.nav-status{font-size:0.65rem;color:var(--muted);letter-spacing:0.1em}
+.nav-status span{color:var(--g)}
+
+/* HERO */
+.hero-wrap{
+  border-bottom:1px solid var(--gddd);
+}
+.hero{
+  min-height:92vh;
+  display:grid;
+  grid-template-columns:1fr 300px;
+  gap:2rem;
+  align-items:center;
+  padding:3rem 4rem;
+  position:relative;
+  max-width:1100px;
+  margin:0 auto;
+  width:100%;
+}
+.prompt-line{font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1.5rem}
+.prompt-line .cmd{color:var(--gd)}
+.hero-ascii-title{
+  font-size:clamp(0.42rem,1.1vw,0.75rem);
+  line-height:1.15;color:var(--gdd);
+  margin-bottom:1.8rem;white-space:pre;font-family:var(--mono);
+}
+.hero-sub{
+  font-size:clamp(0.8rem,1.6vw,1.1rem);color:var(--muted);
+  letter-spacing:0.25em;text-transform:uppercase;
+  margin-bottom:2.5rem;font-family:var(--sans);font-weight:300;
+}
+.hero-desc{
+  max-width:460px;font-size:0.78rem;color:var(--dim);
+  line-height:1.9;margin-bottom:3rem;
+  border-left:2px solid var(--gddd);padding-left:1.2rem;
+}
+.hero-desc em{color:var(--gd);font-style:normal}
+.cta-row{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
+.btn-main{
+  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;
+  text-transform:uppercase;text-decoration:none;
+  background:var(--g);color:#020806;padding:0.75rem 2rem;
+  font-weight:700;transition:background 0.15s,transform 0.1s;display:inline-block;
+}
+.btn-main:hover{background:var(--gd);transform:translateY(-1px)}
+.btn-sec{
+  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;
+  text-transform:uppercase;text-decoration:none;
+  color:var(--muted);border:1px solid var(--gddd);
+  padding:0.75rem 2rem;transition:color 0.15s,border-color 0.15s;display:inline-block;
+}
+.btn-sec:hover{color:var(--g);border-color:var(--gd)}
+
+/* DOGE AVATAR */
+.hero-right{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.doge-frame{
+  border:1px solid var(--gddd);background:var(--s1);
+  padding:1.2rem;position:relative;
+}
+.doge-frame::before{
+  content:'// avatar.exe';
+  position:absolute;top:-1px;left:1rem;
+  font-size:0.6rem;color:var(--gdd);
+  background:var(--bg);padding:0 0.4rem;letter-spacing:0.1em;
+}
+.doge-ascii{
+  font-family:var(--mono);font-size:0.48rem;line-height:1.22;
+  color:var(--gd);white-space:pre;display:block;
+  filter:brightness(0.85);transition:color 0.2s,filter 0.2s;
+}
+.doge-frame:hover .doge-ascii{color:var(--g);filter:brightness(1)}
+.doge-id{font-size:0.62rem;color:var(--muted);letter-spacing:0.12em;text-align:center;margin-top:0.3rem}
+.doge-id span{color:var(--g)}
+
+.hero-corner{
+  position:absolute;right:2.5rem;bottom:2.5rem;
+  font-size:0.62rem;color:var(--gddd);letter-spacing:0.08em;
+  text-align:right;line-height:2;
+}
+
+/* SECTIONS */
+.sec{padding:5rem 0;border-bottom:1px solid var(--gddd)}
+.sec-inner{max-width:1100px;margin:0 auto;padding:0 4rem}
+.sec-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem}
+.sec-head{display:flex;align-items:center;gap:1.5rem;margin-bottom:3.5rem}
+.sec-num{font-size:0.65rem;color:var(--gdd);letter-spacing:0.2em}
+.sec-title{font-family:var(--sans);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--text);letter-spacing:-0.01em}
+.sec-line{flex:1;height:1px;background:var(--gddd)}
+
+/* OPS CARDS */
+.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--gddd)}
+.op-card{
+  background:var(--s1);padding:2rem 1.8rem;
+  position:relative;overflow:hidden;
+  transition:background 0.2s;cursor:default;
+}
+.op-card:hover{background:var(--s2)}
+.op-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--g);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;
+}
+.op-card:hover::before{transform:scaleX(1)}
+.op-tag{font-size:0.6rem;color:var(--gdd);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:1rem}
+.op-name{font-family:var(--sans);font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.6rem;letter-spacing:0.02em}
+.op-desc{font-size:0.75rem;color:var(--muted);line-height:1.8;margin-bottom:1.5rem}
+.op-chips{display:flex;flex-wrap:wrap;gap:0.4rem}
+.chip{font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;border:1px solid var(--gddd);color:var(--muted);padding:0.25rem 0.6rem}
+.op-arrow{position:absolute;bottom:1.5rem;right:1.5rem;color:var(--gddd);font-size:0.8rem;transition:color 0.2s}
+.op-card:hover .op-arrow{color:var(--g)}
+
+/* SKILLS */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}
+.skill-row{border:1px solid var(--gddd);padding:1.5rem}
+.skill-name{font-family:var(--sans);font-size:0.9rem;font-weight:600;color:var(--gd);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.8rem}
+.skill-bar-bg{height:3px;background:var(--gddd);margin-bottom:0.5rem}
+.skill-bar{height:3px;background:var(--g);width:0%;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.skill-lvl{font-size:0.6rem;color:var(--muted);letter-spacing:0.1em}
+
+/* TERMINAL */
+.terminal-block{background:var(--s1);border:1px solid var(--gddd);padding:1.8rem;margin-top:3rem;font-size:0.75rem;line-height:2}
+.tl-line{display:flex;gap:0.8rem}
+.tl-ps{color:var(--gdd)}
+.tl-cmd{color:var(--text)}
+.tl-out{color:var(--muted);padding-left:1.2rem}
+.tl-ok{color:var(--g)}
+.tl-cursor{animation:blink 1s step-end infinite;color:var(--g)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* CONTACT */
+.contact-wrap{max-width:680px}
+.contact-intro{font-size:0.78rem;color:var(--muted);line-height:2;margin-bottom:2.5rem;border-left:2px solid var(--gddd);padding-left:1.2rem}
+.contact-intro em{color:var(--g);font-style:normal}
+.contact-items{display:flex;flex-direction:column;gap:1px;background:var(--gddd)}
+.contact-item{
+  background:var(--s1);display:flex;align-items:center;gap:1.5rem;
+  padding:1.2rem 1.5rem;text-decoration:none;transition:background 0.15s;
+}
+.contact-item:hover{background:var(--s2)}
+.ci-type{font-size:0.6rem;color:var(--gdd);letter-spacing:0.2em;text-transform:uppercase;width:90px;flex-shrink:0}
+.ci-val{font-size:0.8rem;color:var(--text);flex:1;letter-spacing:0.04em}
+.ci-arr{color:var(--gddd);font-size:0.8rem;transition:transform 0.2s,color 0.15s}
+.contact-item:hover .ci-arr{transform:translateX(6px);color:var(--g)}
+
+/* FOOTER */
+footer{padding:1.5rem 0;border-top:none}
+.footer-inner{max-width:1100px;margin:0 auto;padding:1.5rem 4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+footer p{font-size:0.62rem;color:var(--muted);letter-spacing:0.1em}
+footer .fg{color:var(--gdd)}
+
+/* RESPONSIVE */
+@media(max-width:780px){
+  .hero{grid-template-columns:1fr;padding:2rem 1.5rem}
+  .hero-right{display:none}
+  .sec-inner{padding:0 1.5rem}
+  .nav-inner{padding:1rem 1.5rem}
+  .footer-inner{padding:1.5rem}
+  .hero-corner,.nav-status{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="scanline" aria-hidden="true"></div>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-id">
+      <div class="nav-dot"></div>
+      <span>root@llurge:~#</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#ops">/ops</a></li>
+      <li><a href="#skills">/skills</a></li>
+      <li><a href="#contact">/contact</a></li>
+    </ul>
+    <div class="nav-status">STATUS: <span>ONLINE</span></div>
+  </div>
+</nav>
+
+<div class="hero-wrap">
+<section class="hero">
+  <div class="sec-inner">
+  <div class="hero-left">
+    <div class="prompt-line"><span class="cmd">$ whoami</span> &nbsp;--verbose --format=full</div>
+    <pre class="hero-ascii-title">
+██╗     ██╗     ██╗   ██╗██████╗  ██████╗ ███████╗
+██║     ██║     ██║   ██║██╔══██╗██╔════╝ ██╔════╝
+██║     ██║     ██║   ██║██████╔╝██║  ███╗█████╗  
+██║     ██║     ██║   ██║██╔══██╗██║   ██║██╔══╝  
+███████╗███████╗╚██████╔╝██║  ██║╚██████╔╝███████╗
+╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝</pre>
+    <p class="hero-sub">Cybersecurity &nbsp;/&nbsp; Offensive Security &nbsp;/&nbsp; Research</p>
+
+    <div class="cta-row">
+      <a class="btn-main" href="#ops">Operasyonları Gör</a>
+      <a class="btn-sec" href="#contact">İletişim Kur</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="doge-frame">
+      <pre class="doge-ascii">                Y.                      _   
+                YiL                   .`.  
+                Yii;                .; .;;`.
+                YY;ii._           .;`.;;;; :
+                iiYYYYYYiiiii;;;;i` ;;::;;;;
+            _.;YYYYYYiiiiiiYYYii  .;;.   ;;;
+         .YYYYYYYYYYiiYYYYYYYYYYYYii;`  ;;;;
+       .YYYYYYY$$YYiiYY$$$$iiiYYYYYY;.ii;`..
+      :YYY$!.  TYiiYY$$$$$YYYYYYYiiYYYYiYYii.
+      Y$MM$:   :YYYYYY$!"``"4YYYYYiiiYYYYiiYY.
+   `. :MM$$b.,dYY$$Yii" :'   :YYYYllYiiYYYiYY
+_.._ :`4MM$!YYYYYYYYYii,.__.diii$$YYYYYYYYYYY
+.,._ $b`P`     "4$$$$$iiiiiiii$$$$YY$$$$$$YiY;
+   `,.`$:       :$$$$$$$$$YYYYY$$$$$$$$$YYiiYYL
+    "`;$$.    .;PPb$`.,.``T$$YY$$$$YYYYYYiiiYYU:
+    ;$P$;;: ;;;;i$y$"!Y$$$b;$$$Y$YY$$YYYiiiYYiYY
+    $Fi$$ .. ``:iii.`-":YYYYY$$YY$$$$$YYYiiYiYYY
+    :Y$$rb ````  `_..;;i;YYY$YY$$$$$$$YYYYYYYiYY:
+     :$$$$$i;;iiiiidYYYYYYYYYY$$$$$$YYYYYYYiiYYYY.
+      `$$$$$$$YYYYYYYYYYYYY$$$$$$YYYYYYYYiiiYYYYYY
+      .i!$$$$$$YYYYYYYYY$$$$$$YYY$$YYiiiiiiYYYYYYY
+     :YYiii$$$$$$$YYYYYYY$$$$YY$$$$YYiiiiiYYYYYYi'</pre>
+    </div>
+    <div class="doge-id">USER: <span>LLurge</span> &nbsp;|&nbsp; ROLE: <span>sec_researcher</span></div>
+  </div>
+
+  <div class="hero-corner">
+    IP: [REDACTED]<br>
+    LOC: TR / UTC+3<br>
+    CLEARANCE: ACTIVE<br>
+    <span id="htime"></span>
+  </div>
+  </div>
+</section>
+</div>
+
+<!-- OPS -->
+<section class="sec" id="ops">
+  <div class="sec-inner">
+  <div class="sec-head">
+    <span class="sec-num">[01]</span>
+    <h2 class="sec-title">Operasyonlar</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="ops-grid">
+    <div class="op-card">
+      <div class="op-tag">OP-001 // aktif</div>
+      <div class="op-name">Proje Adı</div>
+      <div class="op-desc">Projenin kısa açıklaması. Ne yaptığını, ne tür bir güvenlik çalışması olduğunu anlatan bir iki satır.</div>
+      <div class="op-chips">
+        <span class="chip">Python</span>
+        <span class="chip">Pentest</span>
+        <span class="chip">Network</span>
+      </div>
+      <span class="op-arrow">↗</span>
+    </div>
+    <div class="op-card">
+      <div class="op-tag">OP-002 // tamamlandı</div>
+      <div class="op-name">Proje Adı</div>
+      <div class="op-desc">İkinci proje. Hangi araçları kullandın, hangi açıkları buldun ya da ne tür bir sistem geliştirdin.</div>
+      <div class="op-chips">
+        <span class="chip">Bash</span>
+        <span class="chip">Exploit</span>
+        <span class="chip">CTF</span>
+      </div>
+      <span class="op-arrow">↗</span>
+    </div>
+    <div class="op-card">
+      <div class="op-tag">OP-003 // araştırma</div>
+      <div class="op-name">Proje Adı</div>
+      <div class="op-desc">Üçüncü proje. Araştırma tabanlı bir çalışma, tool geliştirme ya da bir CTF writeup olabilir.</div>
+      <div class="op-chips">
+        <span class="chip">Malware Analysis</span>
+        <span class="chip">RE</span>
+      </div>
+      <span class="op-arrow">↗</span>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="sec" id="skills">
+  <div class="sec-inner">
+  <div class="sec-head">
+    <span class="sec-num">[02]</span>
+    <h2 class="sec-title">Araçlar &amp; Yetenekler</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="skills-grid">
+    <div class="skill-row">
+      <div class="skill-name">Network Security</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="85"></div></div>
+      <div class="skill-lvl">Wireshark · Nmap · Burp Suite</div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-name">Python / Scripting</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="80"></div></div>
+      <div class="skill-lvl">Exploit dev · Automation · Tools</div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-name">OSINT</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="75"></div></div>
+      <div class="skill-lvl">Recon · Maltego · Shodan</div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-name">Web App Security</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="78"></div></div>
+      <div class="skill-lvl">SQLi · XSS · OWASP Top 10</div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-name">Linux / Bash</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="88"></div></div>
+      <div class="skill-lvl">Kali · Server admin · Hardening</div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-name">Reverse Engineering</div>
+      <div class="skill-bar-bg"><div class="skill-bar" data-w="60"></div></div>
+      <div class="skill-lvl">Ghidra · Binary analysis</div>
+    </div>
+  </div>
+  <div class="terminal-block">
+    <div class="tl-line"><span class="tl-ps">llurge@kali:~$</span><span class="tl-cmd"> nmap -sV -p- target</span></div>
+    <div class="tl-out">Starting Nmap scan...</div>
+    <div class="tl-out"><span class="tl-ok">[+]</span> Host is up (0.042s latency)</div>
+    <div class="tl-out"><span class="tl-ok">[+]</span> 3 open ports discovered</div>
+    <div class="tl-out"><span class="tl-ok">[+]</span> Vulnerabilities identified: 2 critical, 1 medium</div>
+    <div class="tl-line" style="margin-top:0.5rem">
+      <span class="tl-ps">llurge@kali:~$</span>
+      <span class="tl-cmd"> <span class="tl-cursor">█</span></span>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="sec" id="contact">
+  <div class="sec-inner">
+  <div class="sec-head">
+    <span class="sec-num">[03]</span>
+    <h2 class="sec-title">İletişim Kanalları</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="contact-wrap">
+
+    <div class="contact-items">
+      <a class="contact-item" href="mailto:llurge@proton.me">
+        <span class="ci-type">MAIL</span>
+        <span class="ci-val">llurge@proton.me</span>
+        <span class="ci-arr">→</span>
+      </a>
+      <a class="contact-item" href="https://discord.com/users/690100742161301557" target="_blank">
+        <span class="ci-type">DISCORD</span>
+        <span class="ci-val">690100742161301557</span>
+        <span class="ci-arr">→</span>
+      </a>
+      <a class="contact-item" href="https://github.com/LLurge" target="_blank">
+        <span class="ci-type">GITHUB</span>
+        <span class="ci-val">github.com/LLurge</span>
+        <span class="ci-arr">→</span>
+      </a>
+      <a class="contact-item" href="https://tryhackme.com/p/LLurge" target="_blank">
+        <span class="ci-type">TRYHACKME</span>
+        <span class="ci-val">LLurge — Top %3</span>
+        <span class="ci-arr">→</span>
+      </a>
+    </div>
+  </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <p>© 2026 <span class="fg">LLurge</span>. All rights reserved.</p>
+    <p><span class="fg">[ SECURE ]</span> &nbsp;—&nbsp; Built from scratch</p>
+  </div>
+</footer>
+
+<script>
+  // Canlı saat
+  function tick() {
+    var d = new Date();
+    var h = String(d.getHours()).padStart(2, '0');
+    var m = String(d.getMinutes()).padStart(2, '0');
+    var s = String(d.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('htime');
+    if (el) el.textContent = 'TIME: ' + h + ':' + m + ':' + s;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // Skill bar animasyonu
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.skill-bar').forEach(function(bar) {
+          setTimeout(function() {
+            bar.style.width = bar.getAttribute('data-w') + '%';
+          }, 100);
+        });
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  var sg = document.querySelector('.skills-grid');
+  if (sg) obs.observe(sg);
+</script>
+</body>
+</html>
