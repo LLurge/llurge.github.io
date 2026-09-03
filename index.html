@@ -2,467 +2,1275 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLurge — Cybersecurity</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Planım — TYT & AYT Çalışma Sistemi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#020806;
-  --s1:#060e09;
-  --s2:#0a160c;
-  --g:#00ff41;
-  --gd:#00c032;
-  --gdd:#007a1f;
-  --gddd:#003d10;
-  --dim:#1a4d23;
-  --muted:#2a6635;
-  --text:#c8ffd4;
-  --mono:'Share Tech Mono',monospace;
-  --sans:'Rajdhani',sans-serif;
-}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--mono);overflow-x:hidden;min-height:100vh}
+  :root{
+    --rowh:52px;
+    --paper:#0B0B0D;
+    --ink:#ECEDF0;
+    --ink-soft:#9DA2AC;
+    --ink-faint:#6A6E77;
+    --line:#26272C;
+    --card:#131418;
+    --input-bg:#1B1C21;
+    --accent:#6C8CFF;
+    --accent-soft:rgba(108,140,255,0.16);
+    --good:#4FD97A;
+    --good-soft:rgba(79,217,122,0.14);
+    --danger:#FF6B6B;
+    --radius:10px;
+    --font-head:'Space Grotesk', 'Segoe UI', sans-serif;
+    --font-body:'Inter', 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft);}
 
-.scanline{
-  position:fixed;top:0;left:0;right:0;bottom:0;
-  pointer-events:none;z-index:9999;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
-}
+  /* ---------- shell ---------- */
+  .shell{max-width:1180px; margin:0 auto; padding:20px 16px 60px;}
+  header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:6px; flex-wrap:wrap;}
+  .brand h1{font-family:var(--font-head); font-size:26px; font-weight:700; margin:0; letter-spacing:-0.01em; color:var(--ink);}
+  .brand p{margin:4px 0 0; color:var(--ink-soft); font-size:13.5px; max-width:520px;}
+  .save-status{font-size:11.5px; color:var(--ink-faint); font-family:var(--font-head); min-width:90px; text-align:right; padding-top:6px;}
 
-/* NAV */
-nav{
-  border-bottom:1px solid var(--gddd);
-  background:var(--bg);
-  position:sticky;top:0;z-index:100;
-}
-.nav-inner{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:1rem 4rem;
-  max-width:1100px;
-  margin:0 auto;
-}
-.nav-id{display:flex;align-items:center;gap:0.8rem;font-size:0.8rem;color:var(--g);letter-spacing:0.12em}
-.nav-dot{width:8px;height:8px;background:var(--g);border-radius:50%;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.8)}}
-.nav-links{display:flex;gap:2.5rem;list-style:none}
-.nav-links a{font-size:0.7rem;color:var(--muted);text-decoration:none;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.15s}
-.nav-links a:hover{color:var(--g)}
-.nav-status{font-size:0.65rem;color:var(--muted);letter-spacing:0.1em}
-.nav-status span{color:var(--g)}
+  .tabs{display:flex; gap:6px; margin:18px 0 18px; border-bottom:1px solid var(--line);}
+  .tab-btn{
+    font-family:var(--font-head); font-weight:600; font-size:14px;
+    background:none; border:none; padding:10px 4px; margin-right:18px;
+    color:var(--ink-faint); cursor:pointer; border-bottom:2.5px solid transparent; transition:color .15s;
+  }
+  .tab-btn.active{color:var(--ink); border-bottom-color:var(--accent);}
+  .tab-btn:hover{color:var(--ink);}
 
-/* HERO */
-.hero-wrap{
-  border-bottom:1px solid var(--gddd);
-}
-.hero{
-  min-height:92vh;
-  display:flex;
-  align-items:center;
-  padding:3rem 4rem;
-  position:relative;
-  max-width:1100px;
-  margin:0 auto;
-  width:100%;
-}
-.hero-body{
-  display:flex;
-  align-items:center;
-  gap:2.5rem;
-  width:100%;
-}
-.prompt-line{font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1.5rem}
-.prompt-line .cmd{color:var(--gd)}
-.hero-ascii-title{
-  font-size:clamp(0.42rem,1.1vw,0.75rem);
-  line-height:1.15;color:var(--gdd);
-  margin-bottom:1.8rem;white-space:pre;font-family:var(--mono);
-}
-.hero-sub{
-  font-size:clamp(0.8rem,1.6vw,1.1rem);color:var(--muted);
-  letter-spacing:0.25em;text-transform:uppercase;
-  margin-bottom:2.5rem;font-family:var(--sans);font-weight:300;
-}
-.hero-desc{
-  max-width:460px;font-size:0.78rem;color:var(--dim);
-  line-height:1.9;margin-bottom:3rem;
-  border-left:2px solid var(--gddd);padding-left:1.2rem;
-}
-.hero-desc em{color:var(--gd);font-style:normal}
-.cta-row{display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center}
-.btn-main{
-  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;
-  text-transform:uppercase;text-decoration:none;
-  background:var(--g);color:#020806;padding:0.75rem 2rem;
-  font-weight:700;transition:background 0.15s,transform 0.1s;display:inline-block;
-}
-.btn-main:hover{background:var(--gd);transform:translateY(-1px)}
-.btn-sec{
-  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.12em;
-  text-transform:uppercase;text-decoration:none;
-  color:var(--muted);border:1px solid var(--gddd);
-  padding:0.75rem 2rem;transition:color 0.15s,border-color 0.15s;display:inline-block;
-}
-.btn-sec:hover{color:var(--g);border-color:var(--gd)}
+  .stats-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;}
+  .stat-chip{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:12.5px; color:var(--ink-soft); display:flex; gap:6px; align-items:center;}
+  .stat-chip b{color:var(--ink); font-family:var(--font-head);}
 
-/* DOGE AVATAR */
-.hero-right{display:flex;flex-direction:column;align-items:center;gap:1rem;flex-shrink:0}
-.doge-frame{
-  border:1px solid var(--gddd);background:var(--s1);
-  padding:1.2rem;position:relative;
-}
-.doge-frame::before{
-  content:'// avatar.exe';
-  position:absolute;top:-1px;left:1rem;
-  font-size:0.6rem;color:var(--gdd);
-  background:var(--bg);padding:0 0.4rem;letter-spacing:0.1em;
-}
-.doge-ascii{
-  font-family:var(--mono);font-size:0.48rem;line-height:1.22;
-  color:var(--gd);white-space:pre;display:block;
-  filter:brightness(0.85);transition:color 0.2s,filter 0.2s;
-}
-.doge-frame:hover .doge-ascii{color:var(--g);filter:brightness(1)}
-.doge-id{font-size:0.62rem;color:var(--muted);letter-spacing:0.12em;text-align:center;margin-top:0.3rem}
-.doge-id span{color:var(--g)}
+  .view{display:none;}
+  .view.active{display:block;}
 
-.hero-corner{
-  position:absolute;right:2.5rem;bottom:2.5rem;
-  font-size:0.62rem;color:var(--gddd);letter-spacing:0.08em;
-  text-align:right;line-height:2;
-}
+  /* ---------- calendar ---------- */
+  .cal-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;}
+  .cal-week-nav{display:flex; align-items:center; gap:8px;}
+  .cal-week-nav h2{font-family:var(--font-head); font-size:15.5px; margin:0; color:var(--ink); min-width:170px;}
+  .btn-icon{background:none; border:1px solid var(--line); color:var(--ink-soft); width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:15px; font-family:var(--font-head); line-height:1;}
+  .btn-icon:hover{border-color:var(--accent); color:var(--accent);}
 
-/* SECTIONS */
-.sec{padding:5rem 0;border-bottom:1px solid var(--gddd)}
-.sec-inner{max-width:1100px;margin:0 auto;padding:0 4rem}
-.sec-inner{max-width:1100px;margin:0 auto;padding:0 1.5rem}
-.sec-head{display:flex;align-items:center;gap:1.5rem;margin-bottom:3.5rem}
-.sec-num{font-size:0.65rem;color:var(--gdd);letter-spacing:0.2em}
-.sec-title{font-family:var(--sans);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--text);letter-spacing:-0.01em}
-.sec-line{flex:1;height:1px;background:var(--gddd)}
+  .cal-shell{border-radius:var(--radius); overflow:hidden; border:1px solid var(--line);}
+  .cal-scroll{max-height:640px; overflow:auto; background:var(--card);}
+  .cal-scroll::-webkit-scrollbar{width:10px; height:10px;}
+  .cal-scroll::-webkit-scrollbar-track{background:transparent;}
+  .cal-scroll::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+  .cal-scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-faint);}
 
-/* OPS CARDS */
-.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1px;background:var(--gddd)}
-.op-card{
-  background:var(--s1);padding:2rem 1.8rem;
-  position:relative;overflow:hidden;
-  transition:background 0.2s;cursor:default;
-}
-.op-card:hover{background:var(--s2)}
-.op-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--g);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;
-}
-.op-card:hover::before{transform:scaleX(1)}
-.op-tag{font-size:0.6rem;color:var(--gdd);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:1rem}
-.op-name{font-family:var(--sans);font-size:1.15rem;font-weight:700;color:var(--text);margin-bottom:0.6rem;letter-spacing:0.02em}
-.op-desc{font-size:0.75rem;color:var(--muted);line-height:1.8;margin-bottom:1.5rem}
-.op-chips{display:flex;flex-wrap:wrap;gap:0.4rem}
-.chip{font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;border:1px solid var(--gddd);color:var(--muted);padding:0.25rem 0.6rem}
-.op-arrow{position:absolute;bottom:1.5rem;right:1.5rem;color:var(--gddd);font-size:0.8rem;transition:color 0.2s}
-.op-card:hover .op-arrow{color:var(--g)}
+  .cal-inner{min-width:820px;}
 
-/* SKILLS */
-.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}
-.skill-row{border:1px solid var(--gddd);padding:1.5rem}
-.skill-name{font-family:var(--sans);font-size:0.9rem;font-weight:600;color:var(--gd);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.8rem}
-.skill-bar-bg{height:3px;background:var(--gddd);margin-bottom:0.5rem}
-.skill-bar{height:3px;background:var(--g);width:0%;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
-.skill-lvl{font-size:0.6rem;color:var(--muted);letter-spacing:0.1em}
+  .cal-headrow{display:grid; grid-template-columns:54px repeat(7,minmax(110px,1fr)); position:sticky; top:0; z-index:3; background:var(--card); border-bottom:1px solid var(--line);}
+  .cal-corner{position:sticky; left:0; z-index:4; background:var(--card);}
+  .cal-day-head{padding:10px 6px 12px; text-align:center; border-left:1px solid var(--line);}
+  .cal-day-abbr{font-family:var(--font-head); font-size:10.5px; font-weight:600; color:var(--ink-faint); letter-spacing:0.03em;}
+  .cal-day-num{font-family:var(--font-head); font-size:18px; font-weight:600; margin-top:4px; color:var(--ink); line-height:1;}
+  .cal-day-num.is-today{display:inline-flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:50%; background:var(--accent); color:#fff;}
 
-/* TERMINAL */
-.terminal-block{background:var(--s1);border:1px solid var(--gddd);padding:1.8rem;margin-top:3rem;font-size:0.75rem;line-height:2}
-.tl-line{display:flex;gap:0.8rem}
-.tl-ps{color:var(--gdd)}
-.tl-cmd{color:var(--text)}
-.tl-out{color:var(--muted);padding-left:1.2rem}
-.tl-ok{color:var(--g)}
-.tl-cursor{animation:blink 1s step-end infinite;color:var(--g)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  .cal-bodygrid{display:grid; grid-template-columns:54px repeat(7,minmax(110px,1fr));}
+  .cal-gutter{position:sticky; left:0; z-index:2; background:var(--card); border-right:1px solid var(--line); position:relative;}
+  .cal-hour-label{position:absolute; right:8px; font-size:10px; font-weight:600; color:var(--ink-faint); transform:translateY(-50%); font-family:var(--font-head); white-space:nowrap;}
 
-/* CONTACT */
-.contact-wrap{max-width:680px}
-.contact-intro{font-size:0.78rem;color:var(--muted);line-height:2;margin-bottom:2.5rem;border-left:2px solid var(--gddd);padding-left:1.2rem}
-.contact-intro em{color:var(--g);font-style:normal}
-.contact-items{display:flex;flex-direction:column;gap:1px;background:var(--gddd)}
-.contact-item{
-  background:var(--s1);display:flex;align-items:center;gap:1.5rem;
-  padding:1.2rem 1.5rem;text-decoration:none;transition:background 0.15s;
-}
-.contact-item:hover{background:var(--s2)}
-.ci-type{font-size:0.6rem;color:var(--gdd);letter-spacing:0.2em;text-transform:uppercase;width:90px;flex-shrink:0}
-.ci-val{font-size:0.8rem;color:var(--text);flex:1;letter-spacing:0.04em}
-.ci-arr{color:var(--gddd);font-size:0.8rem;transition:transform 0.2s,color 0.15s}
-.contact-item:hover .ci-arr{transform:translateX(6px);color:var(--g)}
+  .cal-track{
+    position:relative; border-left:1px solid var(--line);
+    background-image:repeating-linear-gradient(to bottom, var(--line) 0, var(--line) 1px, transparent 1px, transparent var(--rowh));
+    touch-action:none;
+  }
+  .cal-slot{position:absolute; left:0; right:0; cursor:pointer;}
+  .cal-slot:hover{background:var(--accent-soft);}
 
-/* FOOTER */
-footer{padding:1.5rem 0;border-top:none}
-.footer-inner{max-width:1100px;margin:0 auto;padding:1.5rem 4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-footer p{font-size:0.62rem;color:var(--muted);letter-spacing:0.1em}
-footer .fg{color:var(--gdd)}
+  .cal-block{
+    position:absolute; left:4px; right:4px; border-radius:6px; padding:4px 8px;
+    border-left:3px solid var(--accent); overflow:hidden; cursor:pointer; z-index:2; transition:filter .1s;
+  }
+  .cal-block:hover{filter:brightness(1.2);}
+  .cb-time{font-size:10px; font-weight:700; font-family:var(--font-head); color:var(--ink-soft); white-space:nowrap;}
+  .cb-konu{font-size:12px; font-weight:600; margin-top:1px; line-height:1.25; color:var(--ink); overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
 
-/* RESPONSIVE */
-@media(max-width:780px){
-  .hero{grid-template-columns:1fr;padding:2rem 1.5rem}
-  .hero-right{display:none}
-  .sec-inner{padding:0 1.5rem}
-  .nav-inner{padding:1rem 1.5rem}
-  .footer-inner{padding:1.5rem}
-  .hero-corner,.nav-status{display:none}
-}
+  .cal-resize-handle{position:absolute; left:0; right:0; bottom:0; height:9px; cursor:ns-resize; z-index:4;}
+  .cal-resize-handle::after{content:''; position:absolute; left:50%; bottom:2px; width:22px; height:3px; border-radius:2px; background:rgba(255,255,255,0.4); transform:translateX(-50%); opacity:0; transition:opacity .12s;}
+  .cal-block:hover .cal-resize-handle::after{opacity:1;}
+
+  /* ---------- stats tab ---------- */
+  .view h2{font-family:var(--font-head); font-size:16px; margin:26px 0 12px; color:var(--ink);}
+  .view h2:first-of-type{margin-top:0;}
+  .stats-panel{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:16px;}
+  .stats-panel h3{font-family:var(--font-head); font-size:12.5px; margin:0 0 10px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:0.03em;}
+
+  .progress-overview{display:flex; gap:14px; flex-wrap:wrap; margin-bottom:6px;}
+  .progress-card{flex:1; min-width:220px; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px;}
+  .progress-card .pc-label{font-family:var(--font-head); font-size:13px; font-weight:600; color:var(--ink); margin-bottom:9px;}
+  .progress-card .progress-bar{height:7px;}
+  .progress-card .progress-label{margin-top:8px;}
+
+  .book-progress-list{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:6px 16px;}
+  .bpr-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .bpr-row:last-child{border-bottom:none;}
+  .bpr-name{flex:0 0 150px; font-size:12.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bpr-badge{flex:0 0 110px; font-size:10px; color:var(--ink-soft);}
+  .bpr-bar{flex:1; height:6px; background:var(--line); border-radius:3px; overflow:hidden;}
+  .bpr-bar-fill{height:100%; background:var(--good);}
+  .bpr-pct{flex:0 0 68px; text-align:right; font-size:11px; color:var(--ink-faint); font-weight:600;}
+
+  /* ---------- books ---------- */
+  .books-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .books-toolbar h2{font-family:var(--font-head); font-size:18px; margin:0; color:var(--ink);}
+  .btn-primary{
+    background:var(--accent); color:#fff; border:none; border-radius:8px; padding:9px 16px;
+    font-family:var(--font-body); font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .btn-primary:hover{background:#5677EE;}
+  .btn-ghost{background:none; border:1px solid var(--line); color:var(--ink-soft); border-radius:8px; padding:9px 16px; font-weight:600; font-size:13px; cursor:pointer; font-family:var(--font-body);}
+  .btn-ghost:hover{border-color:var(--ink-faint); color:var(--ink);}
+
+  .books-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:14px;}
+  .book-card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; cursor:pointer; display:flex; flex-direction:column; transition:box-shadow .12s;}
+  .book-card:hover{box-shadow:0 2px 10px rgba(0,0,0,0.4);}
+  .book-cover{width:100%; aspect-ratio:3/4; object-fit:cover; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; color:var(--accent); font-family:var(--font-head); font-size:30px; font-weight:700;}
+  .book-info{padding:10px 11px 12px;}
+  .book-title{font-weight:700; font-size:13px; line-height:1.3; margin-bottom:4px; color:var(--ink);}
+  .book-badge{font-size:10px; font-weight:600; color:var(--ink-soft);}
+  .progress-bar{height:5px; background:var(--line); border-radius:3px; margin-top:9px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--good); border-radius:3px;}
+  .progress-label{font-size:10.5px; color:var(--ink-faint); margin-top:5px; font-weight:600;}
+
+  .empty-books{border:1.5px dashed var(--line); border-radius:var(--radius); padding:36px 20px; text-align:center; color:var(--ink-faint); font-size:13.5px;}
+
+  /* ---------- book detail ---------- */
+  .detail-back{background:none; border:none; color:var(--ink-soft); font-size:13px; font-weight:600; cursor:pointer; padding:0 0 14px; font-family:var(--font-body);}
+  .detail-back:hover{color:var(--accent);}
+  .detail-header{display:flex; gap:16px; align-items:center; margin-bottom:6px;}
+  .detail-cover{width:72px; height:96px; border-radius:8px; object-fit:cover; background:var(--accent-soft); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--accent); font-family:var(--font-head); font-size:26px; font-weight:700;}
+  .detail-title{font-family:var(--font-head); font-size:19px; font-weight:700; margin:0 0 4px; color:var(--ink);}
+  .detail-sub{font-size:12.5px; color:var(--ink-soft);}
+  .detail-progress{max-width:320px; margin-top:10px;}
+  .detail-actions{margin-left:auto; display:flex; gap:8px; align-self:flex-start;}
+
+  .topics-list{margin-top:22px; border-top:1px solid var(--line);}
+  .topic-row{display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line);}
+  .topic-row input[type=checkbox]{width:18px; height:18px; accent-color:var(--good); cursor:pointer; flex-shrink:0;}
+  .topic-name{flex:1; font-size:13.5px; color:var(--ink);}
+  .topic-row.done .topic-name{color:var(--ink-faint); text-decoration:line-through;}
+
+  /* ---------- modal ---------- */
+  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:80; padding:16px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; width:100%; max-width:400px; max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:13px; color:var(--ink);}
+  .modal h3{font-family:var(--font-head); font-size:17px; margin:0 0 2px; color:var(--ink);}
+  .field label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .field select, .field input[type=text], .field input[type=number]{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px;
+    font-size:13.5px; font-family:var(--font-body); background:var(--input-bg); color:var(--ink);
+  }
+  .field select:focus, .field input:focus{outline:none; border-color:var(--accent);}
+  .field-row{display:flex; gap:10px;}
+  .field-row .field{flex:1;}
+  .photo-row{display:flex; gap:12px; align-items:center;}
+  .photo-preview{width:56px; height:74px; border-radius:6px; background:var(--input-bg); border:1px dashed var(--line); object-fit:cover; flex-shrink:0;}
+  .photo-preview.has-img{border-style:solid;}
+  .file-btn{font-size:12px; padding:8px 12px; border:1px solid var(--line); border-radius:7px; background:none; cursor:pointer; font-family:var(--font-body); font-weight:600; color:var(--ink-soft);}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:6px;}
+  .btn-del{font-size:12.5px; color:var(--danger); background:none; border:none; cursor:pointer; padding:3px 4px; font-weight:600;}
+
+  @media (max-width:640px){
+    .brand h1{font-size:22px;}
+    .detail-header{flex-wrap:wrap;}
+    .detail-actions{margin-left:0;}
+    .cal-scroll{max-height:70vh;}
+    .bpr-name{flex-basis:100px;}
+    .bpr-badge{display:none;}
+    .cal-week-nav h2{min-width:0; font-size:13.5px;}
+  }
 </style>
 </head>
 <body>
 
-<div class="scanline" aria-hidden="true"></div>
-
-<nav>
-  <div class="nav-inner">
-    <div class="nav-id">
-      <div class="nav-dot"></div>
-      <span>root@llurge:~#</span>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <h1>Planım</h1>
+      <p>TYT ve AYT için haftalık çalışma programı, izlediğin videoları ve çözdüğün soruları not al, kitaplarındaki konuları takip et. Her hafta kendi geçmişini saklar.</p>
     </div>
-    <ul class="nav-links">
-      <li><a href="#ops">/ops</a></li>
-      <li><a href="#skills">/skills</a></li>
-      <li><a href="#contact">/contact</a></li>
-    </ul>
-    <div class="nav-status">STATUS: <span>ONLINE</span></div>
-  </div>
-</nav>
+    <div class="save-status" id="saveStatus"></div>
+  </header>
 
-<div class="hero-wrap">
-<section class="hero">
-  <div class="sec-inner">
-  <div class="hero-body">
-  <div class="hero-right">
-    <div class="doge-frame">
-      <pre class="doge-ascii">                Y.                      _   
-                YiL                   .`.  
-                Yii;                .; .;;`.
-                YY;ii._           .;`.;;;; :
-                iiYYYYYYiiiii;;;;i` ;;::;;;;
-            _.;YYYYYYiiiiiiYYYii  .;;.   ;;;
-         .YYYYYYYYYYiiYYYYYYYYYYYYii;`  ;;;;
-       .YYYYYYY$$YYiiYY$$$$iiiYYYYYY;.ii;`..
-      :YYY$!.  TYiiYY$$$$$YYYYYYYiiYYYYiYYii.
-      Y$MM$:   :YYYYYY$!"``"4YYYYYiiiYYYYiiYY.
-   `. :MM$$b.,dYY$$Yii" :'   :YYYYllYiiYYYiYY
-_.._ :`4MM$!YYYYYYYYYii,.__.diii$$YYYYYYYYYYY
-.,._ $b`P`     "4$$$$$iiiiiiii$$$$YY$$$$$$YiY;
-   `,.`$:       :$$$$$$$$$YYYYY$$$$$$$$$YYiiYYL
-    "`;$$.    .;PPb$`.,.``T$$YY$$$$YYYYYYiiiYYU:
-    ;$P$;;: ;;;;i$y$"!Y$$$b;$$$Y$YY$$YYYiiiYYiYY
-    $Fi$$ .. ``:iii.`-":YYYYY$$YY$$$$$YYYiiYiYYY
-    :Y$$rb ````  `_..;;i;YYY$YY$$$$$$$YYYYYYYiYY:
-     :$$$$$i;;iiiiidYYYYYYYYYY$$$$$$YYYYYYYiiYYYY.
-      `$$$$$$$YYYYYYYYYYYYY$$$$$$YYYYYYYYiiiYYYYYY
-      .i!$$$$$$YYYYYYYYY$$$$$$YYY$$YYiiiiiiYYYYYYY
-     :YYiii$$$$$$$YYYYYYY$$$$YY$$$$YYiiiiiYYYYYYi'</pre>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="program">Haftalık Program</button>
+    <button class="tab-btn" data-tab="books">Kitaplarım</button>
+    <button class="tab-btn" data-tab="stats">İstatistikler</button>
+  </nav>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- PROGRAM VIEW -->
+  <section class="view active" id="view-program">
+    <div class="cal-toolbar">
+      <div class="cal-week-nav">
+        <button class="btn-icon" id="prevWeekBtn">‹</button>
+        <h2 id="calWeekLabel">—</h2>
+        <button class="btn-icon" id="nextWeekBtn">›</button>
+        <button class="btn-ghost" id="todayBtn">Bugün</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button class="btn-primary" id="quickAddBtn">+ Ders Ekle</button>
+      </div>
     </div>
-    <div class="doge-id">USER: <span>LLurge</span> &nbsp;|&nbsp; ROLE: <span>sec_researcher</span></div>
-  </div>
-
-  <div class="hero-left">
-    <div class="prompt-line"><span class="cmd">$ whoami</span> &nbsp;--verbose --format=full</div>
-    <pre class="hero-ascii-title">
-██╗     ██╗     ██╗   ██╗██████╗  ██████╗ ███████╗
-██║     ██║     ██║   ██║██╔══██╗██╔════╝ ██╔════╝
-██║     ██║     ██║   ██║██████╔╝██║  ███╗█████╗  
-██║     ██║     ██║   ██║██╔══██╗██║   ██║██╔══╝  
-███████╗███████╗╚██████╔╝██║  ██║╚██████╔╝███████╗
-╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝</pre>
-    <p class="hero-sub">Cybersecurity &nbsp;/&nbsp; Offensive Security &nbsp;/&nbsp; Research</p>
-    <div class="cta-row">
-      <a class="btn-main" href="#ops">Operasyonları Gör</a>
-      <a class="btn-sec" href="#contact">İletişim Kur</a>
+    <div class="cal-shell">
+      <div class="cal-scroll" id="calScroll">
+        <div class="cal-inner">
+          <div class="cal-headrow" id="calHead"></div>
+          <div class="cal-bodygrid" id="calBodyGrid"></div>
+        </div>
+      </div>
     </div>
-  </div>
-  </div>
+  </section>
 
-  <div class="hero-corner">
-    IP: [REDACTED]<br>
-    LOC: TR / UTC+3<br>
-    CLEARANCE: ACTIVE<br>
-    <span id="htime"></span>
-  </div>
-  </div>
-</section>
+  <!-- BOOKS VIEW -->
+  <section class="view" id="view-books">
+    <div id="booksGridWrap">
+      <div class="books-toolbar">
+        <h2>Kitaplarım</h2>
+        <button class="btn-primary" id="openAddBookBtn">+ Yeni Kitap</button>
+      </div>
+      <div class="books-grid" id="booksGrid"></div>
+    </div>
+    <div id="bookDetailWrap" style="display:none;"></div>
+  </section>
+
+  <!-- STATS VIEW -->
+  <section class="view" id="view-stats">
+    <h2>Haftalık Çalışma <span id="statsWeekLabel" style="color:var(--ink-faint); font-weight:500; font-size:13px;"></span></h2>
+    <div class="stats-panel">
+      <h3>Çalışma Saati</h3>
+      <div id="chartHours"></div>
+    </div>
+    <div class="stats-panel">
+      <h3>Çözülen Soru Sayısı</h3>
+      <div id="chartQuestions"></div>
+    </div>
+
+    <h2>Genel İlerleme</h2>
+    <div class="progress-overview" id="progressOverview"></div>
+
+    <h2>Kitap Bazında İlerleme</h2>
+    <div class="book-progress-list" id="bookProgressList"></div>
+  </section>
 </div>
 
-<!-- OPS -->
-<section class="sec" id="ops">
-  <div class="sec-inner">
-  <div class="sec-head">
-    <span class="sec-num">[01]</span>
-    <h2 class="sec-title">Operasyonlar</h2>
-    <div class="sec-line"></div>
-  </div>
-  <div class="ops-grid">
-    <div class="op-card">
-      <div class="op-tag">OP-001 // aktif</div>
-      <div class="op-name">Proje Adı</div>
-      <div class="op-desc">Projenin kısa açıklaması. Ne yaptığını, ne tür bir güvenlik çalışması olduğunu anlatan bir iki satır.</div>
-      <div class="op-chips">
-        <span class="chip">Python</span>
-        <span class="chip">Pentest</span>
-        <span class="chip">Network</span>
+<!-- ADD BLOCK MODAL -->
+<div class="modal-backdrop" id="blockModalBackdrop">
+  <div class="modal">
+    <h3>Programa Ders Ekle</h3>
+    <div class="field">
+      <label>Gün</label>
+      <select id="fldDay"></select>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Başlangıç</label>
+        <select id="fldStart"></select>
       </div>
-      <span class="op-arrow">↗</span>
-    </div>
-    <div class="op-card">
-      <div class="op-tag">OP-002 // tamamlandı</div>
-      <div class="op-name">Proje Adı</div>
-      <div class="op-desc">İkinci proje. Hangi araçları kullandın, hangi açıkları buldun ya da ne tür bir sistem geliştirdin.</div>
-      <div class="op-chips">
-        <span class="chip">Bash</span>
-        <span class="chip">Exploit</span>
-        <span class="chip">CTF</span>
+      <div class="field">
+        <label>Bitiş</label>
+        <select id="fldEnd"></select>
       </div>
-      <span class="op-arrow">↗</span>
     </div>
-    <div class="op-card">
-      <div class="op-tag">OP-003 // araştırma</div>
-      <div class="op-name">Proje Adı</div>
-      <div class="op-desc">Üçüncü proje. Araştırma tabanlı bir çalışma, tool geliştirme ya da bir CTF writeup olabilir.</div>
-      <div class="op-chips">
-        <span class="chip">Malware Analysis</span>
-        <span class="chip">RE</span>
+    <div class="field">
+      <label>Sınav</label>
+      <select id="fldLevel">
+        <option value="TYT">TYT</option>
+        <option value="AYT">AYT</option>
+        <option value="Diğer">Diğer</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Ders</label>
+      <select id="fldDers"></select>
+    </div>
+    <div class="field">
+      <label>Konu</label>
+      <select id="fldKonu"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelBlockBtn">İptal</button>
+      <button class="btn-primary" id="saveBlockBtn">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLOCK DETAIL MODAL -->
+<div class="modal-backdrop" id="blockDetailBackdrop">
+  <div class="modal">
+    <h3 id="bdTitle">Ders</h3>
+    <div class="field">
+      <label>Zaman</label>
+      <div id="bdTime" style="font-size:13px; color:var(--ink-soft);"></div>
+    </div>
+    <div class="field">
+      <label>İzlediğim video</label>
+      <input type="text" id="bdVideo" placeholder="örn. Hocalara Geldik - Paragraf 3">
+    </div>
+    <div class="field">
+      <label>Soru Sayısı</label>
+      <input type="number" min="0" id="bdSoru" placeholder="örn. 20">
+    </div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn-del" id="bdDeleteBtn">Sil</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-ghost" id="bdCloseBtn">Kapat</button>
+        <button class="btn-primary" id="bdSaveBtn">Kaydet</button>
       </div>
-      <span class="op-arrow">↗</span>
     </div>
   </div>
-  </div>
-</section>
+</div>
 
-<!-- SKILLS -->
-<section class="sec" id="skills">
-  <div class="sec-inner">
-  <div class="sec-head">
-    <span class="sec-num">[02]</span>
-    <h2 class="sec-title">Araçlar &amp; Yetenekler</h2>
-    <div class="sec-line"></div>
-  </div>
-  <div class="skills-grid">
-    <div class="skill-row">
-      <div class="skill-name">Network Security</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="85"></div></div>
-      <div class="skill-lvl">Wireshark · Nmap · Burp Suite</div>
+<!-- ADD BOOK MODAL -->
+<div class="modal-backdrop" id="bookModalBackdrop">
+  <div class="modal">
+    <h3>Yeni Kitap Ekle</h3>
+    <div class="field">
+      <label>Fotoğraf (opsiyonel)</label>
+      <div class="photo-row">
+        <img class="photo-preview" id="bookPhotoPreview" alt="">
+        <button class="file-btn" type="button" id="pickPhotoBtn">Fotoğraf Seç</button>
+        <input type="file" accept="image/*" id="bookPhotoInput" style="display:none;">
+      </div>
     </div>
-    <div class="skill-row">
-      <div class="skill-name">Python / Scripting</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="80"></div></div>
-      <div class="skill-lvl">Exploit dev · Automation · Tools</div>
+    <div class="field">
+      <label>Kitap Adı</label>
+      <input type="text" id="fldBookName" placeholder="örn. 345 Soru Bankası">
     </div>
-    <div class="skill-row">
-      <div class="skill-name">OSINT</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="75"></div></div>
-      <div class="skill-lvl">Recon · Maltego · Shodan</div>
+    <div class="field">
+      <label>Sınav</label>
+      <select id="fldBookLevel">
+        <option value="TYT">TYT</option>
+        <option value="AYT">AYT</option>
+      </select>
     </div>
-    <div class="skill-row">
-      <div class="skill-name">Web App Security</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="78"></div></div>
-      <div class="skill-lvl">SQLi · XSS · OWASP Top 10</div>
+    <div class="field">
+      <label>Ders</label>
+      <select id="fldBookDers"></select>
     </div>
-    <div class="skill-row">
-      <div class="skill-name">Linux / Bash</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="88"></div></div>
-      <div class="skill-lvl">Kali · Server admin · Hardening</div>
-    </div>
-    <div class="skill-row">
-      <div class="skill-name">Reverse Engineering</div>
-      <div class="skill-bar-bg"><div class="skill-bar" data-w="60"></div></div>
-      <div class="skill-lvl">Ghidra · Binary analysis</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelBookBtn">İptal</button>
+      <button class="btn-primary" id="saveBookBtn">Ekle</button>
     </div>
   </div>
-  <div class="terminal-block">
-    <div class="tl-line"><span class="tl-ps">llurge@kali:~$</span><span class="tl-cmd"> nmap -sV -p- target</span></div>
-    <div class="tl-out">Starting Nmap scan...</div>
-    <div class="tl-out"><span class="tl-ok">[+]</span> Host is up (0.042s latency)</div>
-    <div class="tl-out"><span class="tl-ok">[+]</span> 3 open ports discovered</div>
-    <div class="tl-out"><span class="tl-ok">[+]</span> Vulnerabilities identified: 2 critical, 1 medium</div>
-    <div class="tl-line" style="margin-top:0.5rem">
-      <span class="tl-ps">llurge@kali:~$</span>
-      <span class="tl-cmd"> <span class="tl-cursor">█</span></span>
-    </div>
-  </div>
-  </div>
-</section>
+</div>
 
-<!-- CONTACT -->
-<section class="sec" id="contact">
-  <div class="sec-inner">
-  <div class="sec-head">
-    <span class="sec-num">[03]</span>
-    <h2 class="sec-title">İletişim Kanalları</h2>
-    <div class="sec-line"></div>
-  </div>
-  <div class="contact-wrap">
-
-    <div class="contact-items">
-      <a class="contact-item" href="mailto:llurge@proton.me">
-        <span class="ci-type">MAIL</span>
-        <span class="ci-val">llurge@proton.me</span>
-        <span class="ci-arr">→</span>
-      </a>
-      <a class="contact-item" href="https://discord.com/users/690100742161301557" target="_blank">
-        <span class="ci-type">DISCORD</span>
-        <span class="ci-val">690100742161301557</span>
-        <span class="ci-arr">→</span>
-      </a>
-      <a class="contact-item" href="https://github.com/LLurge" target="_blank">
-        <span class="ci-type">GITHUB</span>
-        <span class="ci-val">github.com/LLurge</span>
-        <span class="ci-arr">→</span>
-      </a>
-      <a class="contact-item" href="https://tryhackme.com/p/LLurge" target="_blank">
-        <span class="ci-type">TRYHACKME</span>
-        <span class="ci-val">LLurge — Top %3</span>
-        <span class="ci-arr">→</span>
-      </a>
+<!-- CONFIRM / ALERT MODAL (custom, since sandboxed browsers can block window.confirm/alert) -->
+<div class="modal-backdrop" id="confirmBackdrop">
+  <div class="modal" style="max-width:340px;">
+    <h3 id="confirmTitle">Emin misin?</h3>
+    <p id="confirmMsg" style="font-size:13px; color:var(--ink-soft); margin:0; line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="confirmCancelBtn">Vazgeç</button>
+      <button class="btn-primary" id="confirmOkBtn">Tamam</button>
     </div>
   </div>
-  </div>
-</section>
-
-<footer>
-  <div class="footer-inner">
-    <p>© 2026 <span class="fg">LLurge</span>. All rights reserved.</p>
-    <p><span class="fg">[ SECURE ]</span> &nbsp;—&nbsp; Built from scratch</p>
-  </div>
-</footer>
+</div>
 
 <script>
-  // Canlı saat
-  function tick() {
-    var d = new Date();
-    var h = String(d.getHours()).padStart(2, '0');
-    var m = String(d.getMinutes()).padStart(2, '0');
-    var s = String(d.getSeconds()).padStart(2, '0');
-    var el = document.getElementById('htime');
-    if (el) el.textContent = 'TIME: ' + h + ':' + m + ':' + s;
-  }
-  tick();
-  setInterval(tick, 1000);
+(function(){
 
-  // Skill bar animasyonu
-  var obs = new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (e.isIntersecting) {
-        e.target.querySelectorAll('.skill-bar').forEach(function(bar) {
-          setTimeout(function() {
-            bar.style.width = bar.getAttribute('data-w') + '%';
-          }, 100);
+  /* ---------- storage polyfill: use browser localStorage when running outside Claude.ai
+     (e.g. deployed on GitHub Pages), where window.storage does not exist ---------- */
+  if (!window.storage){
+    window.storage = {
+      get: function(key){
+        return new Promise(function(resolve, reject){
+          try{
+            var v = localStorage.getItem('planim__'+key);
+            if (v === null){ reject(new Error('not found')); return; }
+            resolve({ key: key, value: v });
+          } catch(e){ reject(e); }
         });
-        obs.unobserve(e.target);
+      },
+      set: function(key, value){
+        return new Promise(function(resolve, reject){
+          try{
+            localStorage.setItem('planim__'+key, value);
+            resolve({ key: key, value: value });
+          } catch(e){ reject(e); }
+        });
+      },
+      delete: function(key){
+        return new Promise(function(resolve){
+          try{ localStorage.removeItem('planim__'+key); } catch(e){}
+          resolve({ key: key, deleted: true });
+        });
+      },
+      list: function(prefix){
+        return new Promise(function(resolve){
+          var keys = [];
+          try{
+            for (var i=0; i<localStorage.length; i++){
+              var k = localStorage.key(i);
+              if (k && k.indexOf('planim__') === 0){
+                var real = k.slice('planim__'.length);
+                if (!prefix || real.indexOf(prefix) === 0) keys.push(real);
+              }
+            }
+          } catch(e){}
+          resolve({ keys: keys, prefix: prefix });
+        });
+      }
+    };
+  }
+
+  /* ---------- custom confirm/alert (sandboxed iframes can silently block window.confirm/alert) ---------- */
+  function showDialog(message, opts){
+    opts = opts || {};
+    var okText = opts.okText || 'Tamam';
+    var showCancel = opts.showCancel !== false;
+    return new Promise(function(resolve){
+      var backdrop = document.getElementById('confirmBackdrop');
+      var okBtn = document.getElementById('confirmOkBtn');
+      var cancelBtn = document.getElementById('confirmCancelBtn');
+      document.getElementById('confirmMsg').textContent = message;
+      okBtn.textContent = okText;
+      cancelBtn.style.display = showCancel ? '' : 'none';
+      backdrop.classList.add('open');
+      function cleanup(result){
+        backdrop.classList.remove('open');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        backdrop.removeEventListener('click', onBackdrop);
+        resolve(result);
+      }
+      function onOk(){ cleanup(true); }
+      function onCancel(){ cleanup(false); }
+      function onBackdrop(e){ if (e.target === backdrop) cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      backdrop.addEventListener('click', onBackdrop);
+    });
+  }
+  function showConfirm(message){ return showDialog(message, {okText:'Evet, Sil', showCancel:true}); }
+  function showAlert(message){ return showDialog(message, {okText:'Tamam', showCancel:false}); }
+
+  /* ================= DATA ================= */
+  var TOPICS = {
+    TYT: {
+      "Türkçe": ["Sözcükte Anlam","Cümlede Anlam","Paragrafta Anlam","Paragrafta Yapı","Paragrafta Düşünceyi Geliştirme Yolları","Anlatım Teknikleri","Ses Bilgisi","Yazım Kuralları","Noktalama İşaretleri","Sözcükte Yapı ve Ekler","İsimler","Zamirler","Sıfatlar","Zarflar","Edat-Bağlaç-Ünlem","Fiillerde Anlam (Kip-Kişi)","Ek Fiil","Fiilimsiler","Cümlenin Ögeleri","Cümle Türleri","Anlatım Bozukluğu"],
+      "Matematik": ["Temel Kavramlar","Sayı Basamakları","Bölme ve Bölünebilme","EBOB-EKOK","Rasyonel Sayılar","Basit Eşitsizlikler","Mutlak Değer","Üslü Sayılar","Köklü Sayılar","Çarpanlara Ayırma","Oran-Orantı","Denklem Çözme","Sayı Problemleri","Kesir Problemleri","Yaş Problemleri","İşçi-Havuz Problemleri","Hareket Problemleri","Yüzde Problemleri","Kar-Zarar Problemleri","Karışım Problemleri","Grafik Problemleri","Kümeler","Fonksiyonlar","Polinomlar","2. Dereceden Denklemler","Permütasyon-Kombinasyon","Olasılık","İstatistik"],
+      "Geometri": ["Doğruda ve Üçgende Açılar","Üçgende Açı-Kenar Bağıntıları","Özel Üçgenler","Açıortay ve Kenarortay","Üçgende Alan","Üçgende Benzerlik","Çokgenler","Dörtgenler","Çember ve Daire","Analitik Geometri","Katı Cisimler","Dönüşüm Geometrisi"],
+      "Tarih": ["Tarih ve Zaman","İnsanlığın İlk Dönemleri","İlk Türk Devletleri","İslam Tarihi ve Türklerin İslamiyeti Kabulü","İlk Türk İslam Devletleri","Türkiye Selçuklu Devleti","Beylikten Devlete Osmanlı Siyaseti","Osmanlı Devlet Teşkilatı","Dünya Gücü Osmanlı","Klasik Çağda Osmanlı Toplumu ve Ekonomisi","Değişen Dünya Dengeleri ve Osmanlı","Arayış Yılları","18. Yüzyıl Islahatları"],
+      "Coğrafya": ["Doğa ve İnsan","Dünya'nın Şekli ve Hareketleri","Coğrafi Konum","Harita Bilgisi","İklim Bilgisi","İç Kuvvetler","Dış Kuvvetler","Su-Toprak-Bitki","Nüfus","Göç","Yerleşme","Türkiye'nin Yer Şekilleri","Tarım, Hayvancılık ve Ormancılık","Madenler ve Enerji Kaynakları","Sanayi, Ticaret ve Ulaşım","Turizm","Bölgeler"],
+      "Felsefe Grubu": ["Felsefenin Konusu","Bilgi Felsefesi","Varlık Felsefesi","Ahlak Felsefesi","Sanat Felsefesi","Din Felsefesi","Siyaset Felsefesi","Bilim Felsefesi","İlk Çağ Felsefesi","Psikolojiye Giriş","Sosyolojiye Giriş","Mantığa Giriş"],
+      "Din Kültürü": ["Bilgi ve İnanç","İslam ve İbadet","Gençlik ve Değerler","Din ve Hayat","İslam Düşüncesinde Yorumlar","Din, Kültür ve Medeniyet","Yaşayan Dinler"],
+      "Fizik": ["Fizik Bilimine Giriş","Madde ve Özellikleri","Basınç","Kaldırma Kuvveti","Isı, Sıcaklık ve Genleşme","Hareket","Kuvvet ve Newton Yasaları","İş, Güç ve Enerji","Elektrostatik","Elektrik Akımı","Manyetizma","Dalgalar","Optik"],
+      "Kimya": ["Kimya Bilimi","Atom ve Periyodik Sistem","Kimyasal Türler Arası Etkileşimler","Maddenin Halleri","Doğa ve Kimya","Kimyanın Temel Kanunları","Mol Kavramı","Kimyasal Tepkimeler","Karışımlar","Asit-Baz-Tuz","Kimya Her Yerde"],
+      "Biyoloji": ["Canlıların Ortak Özellikleri","Canlıların Temel Bileşenleri","Hücre","Hücre Zarından Madde Geçişi","Canlıların Sınıflandırılması","Üreme","Kalıtım","Ekosistem Ekolojisi"]
+    },
+    AYT: {
+      "Matematik": ["Fonksiyonlar","Polinomlar","2. Dereceden Denklemler","Permütasyon-Kombinasyon","Olasılık","Trigonometri","Karmaşık Sayılar","Logaritma","Diziler","Limit","Türev","İntegral"],
+      "Geometri": ["Analitik Geometride Doğru","Analitik Geometride Çember","Vektörler","Uzayda Geometri","Katı Cisimler","Dönüşüm Geometrisi","Konikler (Parabol-Elips-Hiperbol)"],
+      "Fizik": ["Vektörler","Kuvvet, Tork ve Denge","Kütle Merkezi","Basit Makineler","Bağıl Hareket","Newton'un Hareket Yasaları","İş, Güç ve Enerji","Atışlar","İtme ve Momentum","Elektrik Alan ve Potansiyel","Sığa (Kondansatör)","Manyetik Alan","Elektromanyetik İndüksiyon","Alternatif Akım","Çembersel Hareket","Basit Harmonik Hareket","Dalga Mekaniği","Atom Fiziği ve Radyoaktivite","Modern Fizik","Fizik ve Uzay Bilimleri"],
+      "Kimya": ["Kimya Bilimi","Atomun Yapısı","Gazlar","Sıvı Çözeltiler ve Çözünürlük","Kimyasal Tepkimelerde Enerji","Reaksiyon Hızı","Kimyasal Denge","Asit-Baz Dengesi","Çözünürlük Dengesi","Elektrokimya","Karbon Kimyasına Giriş","Organik Bileşikler","Enerji Kaynakları ve Bilimsel Gelişmeler"],
+      "Biyoloji": ["Sinir Sistemi","Endokrin Sistem","Duyu Organları","Destek ve Hareket Sistemi","Sindirim Sistemi","Dolaşım ve Bağışıklık Sistemi","Solunum Sistemi","Boşaltım Sistemi","Üreme Sistemi ve Embriyonik Gelişim","Komünite Ekolojisi","Genden Proteine","Canlılık ve Enerji","Bitki Biyolojisi","Popülasyon Ekolojisi"],
+      "Edebiyat": ["Anlam Bilgisi ve Söz Sanatları","Şiir Bilgisi","İslamiyet Öncesi Türk Edebiyatı","Geçiş Dönemi Edebiyatı","Halk Edebiyatı","Divan Edebiyatı","Tanzimat Edebiyatı","Servet-i Fünun Edebiyatı","Milli Edebiyat","Cumhuriyet Dönemi Edebiyatı","Dünya Edebiyatı","Metin Türleri"],
+      "Tarih-1": ["Türk İslam Devletleri","Beylikten Devlete Osmanlı","Dünya Gücü Osmanlı","Arayış Yılları","18. Yüzyılda Değişim","En Uzun Yüzyıl","II. Meşrutiyet Dönemi","Milli Mücadele","Atatürkçülük ve Türk İnkılabı"],
+      "Coğrafya-1": ["Ekosistem","Nüfus Politikaları","Şehirleşme","Türkiye Ekonomisi","Türkiye'de Tarım, Sanayi ve Ulaşım","Bölgeler ve Ülkeler","Çevre ve Toplum"],
+      "Felsefe Grubu": ["Felsefe ile Tanışma","Bilgi Felsefesi","Bilim Felsefesi","Varlık Felsefesi","Ahlak Felsefesi","Sanat Felsefesi","Din Felsefesi","Siyaset Felsefesi","Mantık","Psikoloji","Sosyoloji"],
+      "Din Kültürü": ["İnanç","İbadet","Gençlik, Kişilik ve Ahlak","Din ve Sosyal Değişim","İslam Düşüncesinde Tasavvufi Yorumlar","Güncel Dini Meseleler","Hint ve Çin Dinleri"]
+    },
+    "Diğer": {
+      "Uyku": ["Uyku"],
+      "Yemek": ["Yemek"],
+      "Mola": ["Mola"],
+      "Spor": ["Spor"]
+    }
+  };
+
+  var ROW_H = 52;
+  var ABBR_BY_JSDAY = {0:'PAZ',1:'PZT',2:'SAL',3:'ÇAR',4:'PER',5:'CUM',6:'CMT'};
+  var FULLDAY_BY_JSDAY = {0:'Pazar',1:'Pazartesi',2:'Salı',3:'Çarşamba',4:'Perşembe',5:'Cuma',6:'Cumartesi'};
+  var MONTHS_TR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+  var MONTHS_TR_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+  var OLD_DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
+
+  function pad2(n){ return (n<10?"0":"")+n; }
+
+  var TIMES = [];
+  for (var t=0; t<=96; t++){
+    var totalMin = t*15;
+    var hh = Math.floor(totalMin/60), mm = totalMin%60;
+    TIMES.push(pad2(hh)+":"+pad2(mm));
+  }
+
+  function timeToFloat(str){
+    var p = str.split(':');
+    return parseInt(p[0],10) + parseInt(p[1],10)/60;
+  }
+  function floatToTime(f){
+    var totalMin = Math.round(f*60);
+    var hh = Math.floor(totalMin/60), mm = totalMin%60;
+    if (hh>=24){ hh=24; mm=0; }
+    return pad2(hh)+':'+pad2(mm);
+  }
+
+  /* ---------- date helpers (per-week independence) ---------- */
+  function getMonday(d){
+    var jsDay = d.getDay();
+    var offset = (jsDay===0 ? -6 : 1-jsDay);
+    var m = new Date(d);
+    m.setDate(d.getDate()+offset);
+    m.setHours(0,0,0,0);
+    return m;
+  }
+  function addDays(d, n){
+    var r = new Date(d);
+    r.setDate(d.getDate()+n);
+    return r;
+  }
+  function dateKey(d){
+    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  }
+  function parseDateKey(key){
+    var p = key.split('-');
+    return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10));
+  }
+  function weekDatesFrom(monday){
+    var out = [];
+    for (var i=0;i<7;i++) out.push(addDays(monday,i));
+    return out;
+  }
+  function isSameDay(d1,d2){
+    return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate();
+  }
+  function formatRange(monday){
+    var end = addDays(monday,6);
+    var y = end.getFullYear();
+    return monday.getDate()+' '+MONTHS_TR_SHORT[monday.getMonth()]+' – '+end.getDate()+' '+MONTHS_TR_SHORT[end.getMonth()]+' '+y;
+  }
+  function formatDateLabel(key){
+    var d = parseDateKey(key);
+    return FULLDAY_BY_JSDAY[d.getDay()]+', '+d.getDate()+' '+MONTHS_TR[d.getMonth()];
+  }
+
+  var PALETTE = ["#6C8CFF","#FF7B93","#4FD3D9","#B192FF","#FFC670","#5FE08A","#E8A16B","#7FC0FF","#FF7FC0","#F0D264","#FF9E78","#4FE0C4"];
+  function colorForDers(ders){
+    if (ders === 'Uyku') return '#545A68';
+    var sum = 0;
+    for (var i=0;i<ders.length;i++) sum += ders.charCodeAt(i);
+    return PALETTE[sum % PALETTE.length];
+  }
+  function hexToRgba(hex, alpha){
+    hex = hex.replace('#','');
+    var r=parseInt(hex.substring(0,2),16), g=parseInt(hex.substring(2,4),16), b=parseInt(hex.substring(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+
+  /* ================= STATE ================= */
+  var schedule = {};
+  var books = [];
+  var seededWeeks = [];
+  var currentWeekStart = getMonday(new Date());
+  var currentBookId = null;
+  var currentDetailId = null;
+  var pendingPhoto = null;
+  var scheduleTimer = null;
+  var booksTimer = null;
+  var dragState = null;
+
+  function uid(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  /* ================= STORAGE ================= */
+  async function loadAll(){
+    try{
+      var s = await window.storage.get('schedule', false);
+      schedule = s && s.value ? JSON.parse(s.value) : {};
+    } catch(e){ schedule = {}; }
+
+    try{
+      var sw = await window.storage.get('seededWeeks', false);
+      seededWeeks = sw && sw.value ? JSON.parse(sw.value) : [];
+    } catch(e){ seededWeeks = []; }
+
+    try{
+      var b = await window.storage.get('books', false);
+      books = b && b.value ? JSON.parse(b.value) : [];
+    } catch(e){ books = []; }
+
+    var migrated = migrateOldSchedule();
+    if (migrated) saveSchedule();
+
+    await ensureWeekSeeded(currentWeekStart);
+
+    renderProgram();
+    renderBooksGrid();
+    renderStats();
+  }
+
+  function migrateOldSchedule(){
+    var hasOld = OLD_DAYS.some(function(d){ return schedule.hasOwnProperty(d); });
+    if (!hasOld) return false;
+    var monday = getMonday(new Date());
+    var wDates = weekDatesFrom(monday);
+    OLD_DAYS.forEach(function(d, i){
+      var dk = dateKey(wDates[i]);
+      var oldBlocks = schedule[d] || [];
+      if (!schedule[dk]) schedule[dk] = [];
+      oldBlocks.forEach(function(b){ schedule[dk].push(b); });
+      delete schedule[d];
+    });
+    return true;
+  }
+
+  async function ensureWeekSeeded(monday){
+    var key = dateKey(monday);
+    if (seededWeeks.indexOf(key) !== -1) return;
+    var wDates = weekDatesFrom(monday);
+    wDates.forEach(function(d){
+      var dk = dateKey(d);
+      if (!schedule[dk]) schedule[dk] = [];
+      var hasSleep = schedule[dk].some(function(b){ return b.ders === 'Uyku'; });
+      if (!hasSleep){
+        schedule[dk].push({ id: uid(), start:'00:00', end:'06:30', level:'Diğer', ders:'Uyku', konu:'Uyku', video:'', soru:'' });
       }
     });
-  }, { threshold: 0.2 });
+    seededWeeks.push(key);
+    try{ await window.storage.set('seededWeeks', JSON.stringify(seededWeeks), false); } catch(e){}
+    saveSchedule();
+  }
 
-  var sg = document.querySelector('.skills-grid');
-  if (sg) obs.observe(sg);
+  function setStatus(text, temp){
+    var el = document.getElementById('saveStatus');
+    el.textContent = text;
+    if (temp){
+      clearTimeout(setStatus._t);
+      setStatus._t = setTimeout(function(){ el.textContent = ''; }, 1800);
+    }
+  }
+
+  function saveSchedule(){
+    clearTimeout(scheduleTimer);
+    setStatus('Kaydediliyor…');
+    scheduleTimer = setTimeout(async function(){
+      try{
+        await window.storage.set('schedule', JSON.stringify(schedule), false);
+        setStatus('Kaydedildi ✓', true);
+      } catch(e){ setStatus('Kaydedilemedi', true); }
+    }, 550);
+  }
+
+  function saveBooks(){
+    clearTimeout(booksTimer);
+    setStatus('Kaydediliyor…');
+    booksTimer = setTimeout(async function(){
+      try{
+        await window.storage.set('books', JSON.stringify(books), false);
+        setStatus('Kaydedildi ✓', true);
+      } catch(e){ setStatus('Kaydedilemedi', true); }
+    }, 550);
+  }
+
+  /* ================= STATS (chips + tab) ================= */
+  function renderStats(){
+    var wDates = weekDatesFrom(currentWeekStart);
+    var totalBlocks = 0;
+    wDates.forEach(function(d){
+      totalBlocks += (schedule[dateKey(d)]||[]).filter(function(b){ return b.level !== 'Diğer'; }).length;
+    });
+    var totalTopics = 0, doneTopics = 0;
+    books.forEach(function(bk){
+      totalTopics += bk.topics.length;
+      doneTopics += bk.topics.filter(function(t){return t.done;}).length;
+    });
+    var pct = totalTopics ? Math.round(doneTopics/totalTopics*100) : 0;
+    document.getElementById('statsRow').innerHTML =
+      '<div class="stat-chip">Görüntülenen hafta <b>'+totalBlocks+'</b> ders bloğu</div>' +
+      '<div class="stat-chip"><b>'+books.length+'</b> kitap ekli</div>' +
+      '<div class="stat-chip"><b>'+doneTopics+'/'+totalTopics+'</b> konu tamamlandı ('+pct+'%)</div>';
+
+    renderStatsTab();
+  }
+
+  function computeDailyStudy(){
+    var wDates = weekDatesFrom(currentWeekStart);
+    var hours = wDates.map(function(d){
+      var total = 0;
+      (schedule[dateKey(d)]||[]).forEach(function(b){
+        if (b.level === 'Diğer') return;
+        total += Math.max(timeToFloat(b.end) - timeToFloat(b.start), 0);
+      });
+      return Math.round(total*10)/10;
+    });
+    var questions = wDates.map(function(d){
+      var total = 0;
+      (schedule[dateKey(d)]||[]).forEach(function(b){
+        if (b.level === 'Diğer') return;
+        var q = parseInt(b.soru, 10);
+        if (!isNaN(q)) total += q;
+      });
+      return total;
+    });
+    return { hours: hours, questions: questions };
+  }
+
+  function niceCeil(v){
+    if (v<=0) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log10(v)));
+    var norm = v/mag;
+    var niceNorm;
+    if (norm<=1) niceNorm=1; else if (norm<=2) niceNorm=2; else if (norm<=5) niceNorm=5; else niceNorm=10;
+    return niceNorm*mag;
+  }
+
+  function svgBarChart(labels, values, color, suffix){
+    var W=560, H=190, padL=8, padR=8, padT=16, padB=26;
+    var chartW = W-padL-padR, chartH = H-padT-padB;
+    var maxVal = Math.max.apply(null, values);
+    if (maxVal<=0) maxVal = 1;
+    var niceMax = niceCeil(maxVal);
+    var gap = 14;
+    var barW = (chartW - gap*(values.length-1)) / values.length;
+    var bars='', axisLabels='';
+    values.forEach(function(v,i){
+      var bh = (v/niceMax)*chartH;
+      if (bh<0) bh=0;
+      var x = padL + i*(barW+gap);
+      var y = padT + (chartH-bh);
+      bars += '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="4" fill="'+color+'"></rect>';
+      if (v>0){
+        var vs = (Math.round(v*10)/10)+ (suffix||'');
+        bars += '<text x="'+(x+barW/2).toFixed(1)+'" y="'+(y-6).toFixed(1)+'" text-anchor="middle" font-size="10" fill="var(--ink-soft)" font-family="var(--font-head)">'+vs+'</text>';
+      }
+      axisLabels += '<text x="'+(x+barW/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10.5" fill="var(--ink-faint)" font-family="var(--font-head)">'+labels[i]+'</text>';
+    });
+    var gridLines='';
+    for (var g=0; g<=3; g++){
+      var gy = padT + chartH - (chartH*g/3);
+      gridLines += '<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="var(--line)" stroke-width="1"></line>';
+    }
+    return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%; height:auto; display:block;">'+gridLines+bars+axisLabels+'</svg>';
+  }
+
+  function aggregateProgress(level){
+    var total=0, done=0;
+    books.filter(function(b){ return b.level===level; }).forEach(function(b){
+      total += b.topics.length;
+      done += b.topics.filter(function(t){return t.done;}).length;
+    });
+    return { done:done, total:total, pct: total ? Math.round(done/total*100) : 0 };
+  }
+
+  function renderStatsTab(){
+    var wDates = weekDatesFrom(currentWeekStart);
+    var d = computeDailyStudy();
+    var labels = wDates.map(function(dt){ return ABBR_BY_JSDAY[dt.getDay()]; });
+    document.getElementById('chartHours').innerHTML = svgBarChart(labels, d.hours, 'var(--accent)', 's');
+    document.getElementById('chartQuestions').innerHTML = svgBarChart(labels, d.questions, 'var(--good)', '');
+    document.getElementById('statsWeekLabel').textContent = '('+formatRange(currentWeekStart)+')';
+
+    var tyt = aggregateProgress('TYT');
+    var ayt = aggregateProgress('AYT');
+    function progressCard(label, agg){
+      return '<div class="progress-card">' +
+        '<div class="pc-label">'+label+'</div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:'+agg.pct+'%"></div></div>' +
+        '<div class="progress-label">'+agg.done+'/'+agg.total+' konu tamamlandı ('+agg.pct+'%)</div>' +
+        '</div>';
+    }
+    document.getElementById('progressOverview').innerHTML = progressCard('TYT Genel İlerleme', tyt) + progressCard('AYT Genel İlerleme', ayt);
+
+    var listEl = document.getElementById('bookProgressList');
+    if (!books.length){
+      listEl.innerHTML = '<div class="empty-books">Henüz kitap eklenmedi.</div>';
+    } else {
+      listEl.innerHTML = books.map(function(bk){
+        var total = bk.topics.length;
+        var done = bk.topics.filter(function(t){return t.done;}).length;
+        var pct = total ? Math.round(done/total*100) : 0;
+        return '<div class="bpr-row">' +
+          '<div class="bpr-name">'+escapeHtml(bk.name)+'</div>' +
+          '<div class="bpr-badge" style="color:'+colorForDers(bk.ders)+'">'+bk.level+' · '+escapeHtml(bk.ders)+'</div>' +
+          '<div class="bpr-bar"><div class="bpr-bar-fill" style="width:'+pct+'%"></div></div>' +
+          '<div class="bpr-pct">'+done+'/'+total+' ('+pct+'%)</div>' +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  /* ================= PROGRAM (CALENDAR GRID) RENDER ================= */
+  function renderProgram(){
+    var wDates = weekDatesFrom(currentWeekStart);
+    var today = new Date();
+
+    document.getElementById('calWeekLabel').textContent = formatRange(currentWeekStart);
+
+    var headHtml = '<div class="cal-corner"></div>';
+    wDates.forEach(function(d){
+      var isToday = isSameDay(d, today);
+      headHtml += '<div class="cal-day-head">' +
+        '<div class="cal-day-abbr">'+ABBR_BY_JSDAY[d.getDay()]+'</div>' +
+        '<div class="cal-day-num'+(isToday?' is-today':'')+'">'+d.getDate()+'</div>' +
+        '</div>';
+    });
+    document.getElementById('calHead').innerHTML = headHtml;
+
+    var gutterInner = '';
+    for (var h=0; h<24; h++){
+      gutterInner += '<div class="cal-hour-label" style="top:'+(h*ROW_H)+'px">'+pad2(h)+':00</div>';
+    }
+    var bodyHtml = '<div class="cal-gutter" style="height:'+(24*ROW_H)+'px">'+gutterInner+'</div>';
+
+    wDates.forEach(function(d){
+      var key = dateKey(d);
+      var blocks = (schedule[key]||[]);
+      var trackInner = '';
+      for (var hh=0; hh<24; hh++){
+        trackInner += '<div class="cal-slot" data-key="'+key+'" data-hour="'+hh+'" style="top:'+(hh*ROW_H)+'px;height:'+ROW_H+'px"></div>';
+      }
+      blocks.forEach(function(b){
+        var sf = timeToFloat(b.start), ef = timeToFloat(b.end);
+        var color = colorForDers(b.ders);
+        var top = sf*ROW_H, height = Math.max((ef-sf)*ROW_H-3, 16);
+        trackInner += '<div class="cal-block" data-id="'+b.id+'" style="top:'+top+'px;height:'+height+'px;border-left-color:'+color+';background:'+hexToRgba(color,0.2)+'">'+
+          '<div class="cb-time">'+b.start+'–'+b.end+'</div>'+
+          '<div class="cb-konu">'+escapeHtml(b.konu)+'</div>'+
+          '<div class="cal-resize-handle" data-id="'+b.id+'"></div>'+
+          '</div>';
+      });
+      bodyHtml += '<div class="cal-track" data-key="'+key+'" style="height:'+(24*ROW_H)+'px">'+trackInner+'</div>';
+    });
+
+    document.getElementById('calBodyGrid').innerHTML = bodyHtml;
+
+    if (!renderProgram._scrolled){
+      var scrollEl = document.getElementById('calScroll');
+      scrollEl.scrollTop = 6*ROW_H;
+      renderProgram._scrolled = true;
+    }
+  }
+
+  var calBodyGrid = document.getElementById('calBodyGrid');
+
+  calBodyGrid.addEventListener('click', function(e){
+    if (e.target.closest('.cal-resize-handle')) return;
+    var slot = e.target.closest('.cal-slot');
+    if (slot){
+      openBlockModal(slot.getAttribute('data-key'), parseInt(slot.getAttribute('data-hour'),10));
+      return;
+    }
+    var block = e.target.closest('.cal-block');
+    if (block){
+      openBlockDetail(block.getAttribute('data-id'));
+    }
+  });
+
+  /* ---------- drag to resize ---------- */
+  calBodyGrid.addEventListener('pointerdown', function(e){
+    var handle = e.target.closest('.cal-resize-handle');
+    if (!handle) return;
+    var id = handle.getAttribute('data-id');
+    var res = findBlock(id);
+    if (!res) return;
+    var blockEl = handle.closest('.cal-block');
+    dragState = {
+      id: id,
+      blockEl: blockEl,
+      startY: e.clientY,
+      startHeight: blockEl.offsetHeight,
+      startFloatStart: timeToFloat(res.block.start),
+      currentHeight: blockEl.offsetHeight
+    };
+    try{ handle.setPointerCapture(e.pointerId); } catch(err){}
+    blockEl.style.zIndex = 10;
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  calBodyGrid.addEventListener('pointermove', function(e){
+    if (!dragState) return;
+    var deltaY = e.clientY - dragState.startY;
+    var rawHeight = dragState.startHeight + deltaY;
+    var snapPx = ROW_H/4;
+    var minH = snapPx;
+    if (rawHeight < minH) rawHeight = minH;
+    var snapped = Math.round(rawHeight/snapPx)*snapPx;
+    dragState.blockEl.style.height = snapped+'px';
+    dragState.currentHeight = snapped;
+  });
+
+  function endDrag(commit){
+    if (!dragState) return;
+    if (commit){
+      var durationHours = dragState.currentHeight / ROW_H;
+      var newEndFloat = dragState.startFloatStart + durationHours;
+      newEndFloat = Math.min(newEndFloat, 24);
+      newEndFloat = Math.max(newEndFloat, dragState.startFloatStart + 0.25);
+      var res = findBlock(dragState.id);
+      if (res){
+        res.block.end = floatToTime(newEndFloat);
+        saveSchedule();
+      }
+    }
+    dragState = null;
+    renderProgram();
+    renderStats();
+  }
+  calBodyGrid.addEventListener('pointerup', function(){ endDrag(true); });
+  calBodyGrid.addEventListener('pointercancel', function(){ endDrag(false); });
+
+  /* ---------- week navigation ---------- */
+  async function goToWeek(monday){
+    currentWeekStart = monday;
+    await ensureWeekSeeded(currentWeekStart);
+    renderProgram();
+    renderStats();
+  }
+  document.getElementById('prevWeekBtn').addEventListener('click', function(){ goToWeek(addDays(currentWeekStart,-7)); });
+  document.getElementById('nextWeekBtn').addEventListener('click', function(){ goToWeek(addDays(currentWeekStart,7)); });
+  document.getElementById('todayBtn').addEventListener('click', function(){ goToWeek(getMonday(new Date())); });
+
+  document.getElementById('quickAddBtn').addEventListener('click', function(){ openBlockModal(null, 17); });
+
+  /* ---------- add block modal ---------- */
+  var blockBackdrop = document.getElementById('blockModalBackdrop');
+  var fldDay = document.getElementById('fldDay');
+  var fldStart = document.getElementById('fldStart');
+  var fldEnd = document.getElementById('fldEnd');
+  var fldLevel = document.getElementById('fldLevel');
+  var fldDers = document.getElementById('fldDers');
+  var fldKonu = document.getElementById('fldKonu');
+
+  TIMES.forEach(function(tm){ fldStart.innerHTML += '<option value="'+tm+'">'+tm+'</option>'; });
+  TIMES.forEach(function(tm){ fldEnd.innerHTML += '<option value="'+tm+'">'+tm+'</option>'; });
+
+  function populateDersOptions(level, selectEl, targetKonuEl){
+    var dersList = Object.keys(TOPICS[level]);
+    selectEl.innerHTML = dersList.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+    if (targetKonuEl) populateKonuOptions(level, selectEl.value, targetKonuEl);
+  }
+  function populateKonuOptions(level, ders, selectEl){
+    var list = (TOPICS[level] && TOPICS[level][ders]) ? TOPICS[level][ders] : [];
+    selectEl.innerHTML = list.map(function(k){ return '<option value="'+escapeHtml(k)+'">'+escapeHtml(k)+'</option>'; }).join('');
+  }
+
+  fldLevel.addEventListener('change', function(){ populateDersOptions(fldLevel.value, fldDers, fldKonu); });
+  fldDers.addEventListener('change', function(){ populateKonuOptions(fldLevel.value, fldDers.value, fldKonu); });
+  fldStart.addEventListener('change', function(){
+    var idx = TIMES.indexOf(fldStart.value);
+    var endIdx = Math.min(idx+4, TIMES.length-1);
+    fldEnd.value = TIMES[endIdx];
+  });
+
+  function openBlockModal(dateKeyArg, hour){
+    var wDates = weekDatesFrom(currentWeekStart);
+    fldDay.innerHTML = wDates.map(function(d){
+      var k = dateKey(d);
+      var label = FULLDAY_BY_JSDAY[d.getDay()]+' ('+d.getDate()+' '+MONTHS_TR_SHORT[d.getMonth()]+')';
+      return '<option value="'+k+'">'+label+'</option>';
+    }).join('');
+    fldDay.value = dateKeyArg || dateKey(wDates[0]);
+
+    fldLevel.value = 'TYT';
+    populateDersOptions('TYT', fldDers, fldKonu);
+    if (hour != null){
+      fldStart.value = pad2(hour)+':00';
+      fldEnd.value = pad2(Math.min(hour+1,24))+':00';
+    } else {
+      fldStart.value = '17:00';
+      fldEnd.value = '18:00';
+    }
+    blockBackdrop.classList.add('open');
+  }
+  document.getElementById('cancelBlockBtn').addEventListener('click', function(){ blockBackdrop.classList.remove('open'); });
+  blockBackdrop.addEventListener('click', function(e){ if (e.target === blockBackdrop) blockBackdrop.classList.remove('open'); });
+
+  document.getElementById('saveBlockBtn').addEventListener('click', async function(){
+    if (fldStart.value >= fldEnd.value){
+      await showAlert('Bitiş saati başlangıçtan sonra olmalı.');
+      return;
+    }
+    var block = {
+      id: uid(),
+      start: fldStart.value,
+      end: fldEnd.value,
+      level: fldLevel.value,
+      ders: fldDers.value,
+      konu: fldKonu.value,
+      video: '',
+      soru: ''
+    };
+    var key = fldDay.value;
+    if (!schedule[key]) schedule[key] = [];
+    schedule[key].push(block);
+    saveSchedule();
+    renderProgram();
+    renderStats();
+    blockBackdrop.classList.remove('open');
+  });
+
+  /* ---------- block detail modal ---------- */
+  var detailBackdrop = document.getElementById('blockDetailBackdrop');
+  function findBlock(id){
+    var found = null, foundKey = null;
+    Object.keys(schedule).forEach(function(k){
+      (schedule[k]||[]).forEach(function(b){ if (b.id === id){ found = b; foundKey = k; } });
+    });
+    return found ? {block:found, dateKey:foundKey} : null;
+  }
+
+  function openBlockDetail(id){
+    var res = findBlock(id);
+    if (!res) return;
+    currentDetailId = id;
+    document.getElementById('bdTitle').textContent = res.block.konu;
+    document.getElementById('bdTime').textContent = formatDateLabel(res.dateKey)+' · '+res.block.start+'–'+res.block.end+' · '+res.block.level+' · '+res.block.ders;
+    document.getElementById('bdVideo').value = res.block.video || '';
+    document.getElementById('bdSoru').value = (res.block.soru !== undefined && res.block.soru !== null) ? res.block.soru : '';
+    detailBackdrop.classList.add('open');
+  }
+  document.getElementById('bdCloseBtn').addEventListener('click', function(){ detailBackdrop.classList.remove('open'); });
+  detailBackdrop.addEventListener('click', function(e){ if (e.target === detailBackdrop) detailBackdrop.classList.remove('open'); });
+
+  document.getElementById('bdSaveBtn').addEventListener('click', function(){
+    var res = findBlock(currentDetailId);
+    if (!res) return;
+    res.block.video = document.getElementById('bdVideo').value;
+    res.block.soru = document.getElementById('bdSoru').value;
+    saveSchedule();
+    renderProgram();
+    renderStats();
+    detailBackdrop.classList.remove('open');
+  });
+
+  document.getElementById('bdDeleteBtn').addEventListener('click', async function(){
+    var ok = await showConfirm('Bu dersi programdan silmek istediğine emin misin?');
+    if (!ok) return;
+    Object.keys(schedule).forEach(function(k){
+      schedule[k] = (schedule[k]||[]).filter(function(b){ return b.id !== currentDetailId; });
+    });
+    saveSchedule();
+    renderProgram();
+    renderStats();
+    detailBackdrop.classList.remove('open');
+  });
+
+  /* ================= BOOKS RENDER ================= */
+  function initials(name){ return (name||'?').trim().slice(0,2).toUpperCase(); }
+
+  function renderBooksGrid(){
+    var grid = document.getElementById('booksGrid');
+    if (!books.length){
+      grid.innerHTML = '<div class="empty-books" style="grid-column:1/-1;">Henüz kitap eklemedin. "Yeni Kitap" ile ilk kitabını ekle; konuları otomatik listeleyelim.</div>';
+      return;
+    }
+    var html = '';
+    books.forEach(function(bk){
+      var total = bk.topics.length;
+      var done = bk.topics.filter(function(t){return t.done;}).length;
+      var pct = total ? Math.round(done/total*100) : 0;
+      html += '<div class="book-card" data-id="'+bk.id+'">';
+      if (bk.photo){
+        html += '<img class="book-cover" src="'+bk.photo+'" alt="">';
+      } else {
+        html += '<div class="book-cover">'+initials(bk.name)+'</div>';
+      }
+      html += '<div class="book-info">';
+      html += '  <div class="book-title">'+escapeHtml(bk.name)+'</div>';
+      html += '  <div class="book-badge" style="color:'+colorForDers(bk.ders)+'">'+bk.level+' · '+escapeHtml(bk.ders)+'</div>';
+      html += '  <div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>';
+      html += '  <div class="progress-label">'+done+'/'+total+' konu tamamlandı</div>';
+      html += '</div></div>';
+    });
+    grid.innerHTML = html;
+  }
+
+  document.getElementById('booksGrid').addEventListener('click', function(e){
+    var card = e.target.closest('.book-card');
+    if (card){
+      currentBookId = card.getAttribute('data-id');
+      showBookDetail();
+    }
+  });
+
+  function showBookDetail(){
+    document.getElementById('booksGridWrap').style.display = 'none';
+    var wrap = document.getElementById('bookDetailWrap');
+    wrap.style.display = 'block';
+    renderBookDetail();
+  }
+  function backToGrid(){
+    currentBookId = null;
+    document.getElementById('bookDetailWrap').style.display = 'none';
+    document.getElementById('booksGridWrap').style.display = 'block';
+    renderBooksGrid();
+    renderStats();
+  }
+
+  function renderBookDetail(){
+    var bk = books.find(function(b){ return b.id === currentBookId; });
+    var wrap = document.getElementById('bookDetailWrap');
+    if (!bk){ backToGrid(); return; }
+    var total = bk.topics.length;
+    var done = bk.topics.filter(function(t){return t.done;}).length;
+    var pct = total ? Math.round(done/total*100) : 0;
+
+    var html = '<button class="detail-back" id="backBtn">← Kitaplarım</button>';
+    html += '<div class="detail-header">';
+    if (bk.photo){
+      html += '<img class="detail-cover" src="'+bk.photo+'" alt="">';
+    } else {
+      html += '<div class="detail-cover">'+initials(bk.name)+'</div>';
+    }
+    html += '<div>';
+    html += '  <h2 class="detail-title">'+escapeHtml(bk.name)+'</h2>';
+    html += '  <div class="detail-sub" style="color:'+colorForDers(bk.ders)+'">'+bk.level+' · '+escapeHtml(bk.ders)+'</div>';
+    html += '  <div class="detail-progress"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-label">'+done+'/'+total+' konu tamamlandı ('+pct+'%)</div></div>';
+    html += '</div>';
+    html += '<div class="detail-actions"><button class="btn-ghost" id="deleteBookBtn">Kitabı Sil</button></div>';
+    html += '</div>';
+
+    html += '<div class="topics-list">';
+    bk.topics.forEach(function(t, idx){
+      html += '<div class="topic-row'+(t.done?' done':'')+'">';
+      html += '  <input type="checkbox" data-idx="'+idx+'" '+(t.done?'checked':'')+'>';
+      html += '  <div class="topic-name">'+escapeHtml(t.name)+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    wrap.innerHTML = html;
+
+    document.getElementById('backBtn').addEventListener('click', backToGrid);
+    document.getElementById('deleteBookBtn').addEventListener('click', async function(){
+      var ok = await showConfirm('"'+bk.name+'" kitabını silmek istediğine emin misin?');
+      if (ok){
+        books = books.filter(function(b){ return b.id !== bk.id; });
+        saveBooks();
+        backToGrid();
+      }
+    });
+
+    wrap.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var idx = parseInt(cb.getAttribute('data-idx'), 10);
+        bk.topics[idx].done = cb.checked;
+        saveBooks();
+        cb.closest('.topic-row').classList.toggle('done', cb.checked);
+        var dcount = bk.topics.filter(function(t){return t.done;}).length;
+        var p = total ? Math.round(dcount/total*100) : 0;
+        wrap.querySelector('.progress-fill').style.width = p+'%';
+        wrap.querySelector('.progress-label').textContent = dcount+'/'+total+' konu tamamlandı ('+p+'%)';
+        renderStats();
+      });
+    });
+  }
+
+  /* ---------- add book modal ---------- */
+  var bookBackdrop = document.getElementById('bookModalBackdrop');
+  var fldBookName = document.getElementById('fldBookName');
+  var fldBookLevel = document.getElementById('fldBookLevel');
+  var fldBookDers = document.getElementById('fldBookDers');
+  var photoInput = document.getElementById('bookPhotoInput');
+  var photoPreview = document.getElementById('bookPhotoPreview');
+
+  fldBookLevel.addEventListener('change', function(){
+    populateDersOptions(fldBookLevel.value, fldBookDers, null);
+  });
+
+  document.getElementById('openAddBookBtn').addEventListener('click', function(){
+    fldBookName.value = '';
+    fldBookLevel.value = 'TYT';
+    populateDersOptions('TYT', fldBookDers, null);
+    pendingPhoto = null;
+    photoPreview.src = '';
+    photoPreview.classList.remove('has-img');
+    bookBackdrop.classList.add('open');
+  });
+  document.getElementById('cancelBookBtn').addEventListener('click', function(){ bookBackdrop.classList.remove('open'); });
+  bookBackdrop.addEventListener('click', function(e){ if (e.target === bookBackdrop) bookBackdrop.classList.remove('open'); });
+
+  document.getElementById('pickPhotoBtn').addEventListener('click', function(){ photoInput.click(); });
+  photoInput.addEventListener('change', function(){
+    var file = photoInput.files[0];
+    if (!file) return;
+    resizeImage(file, 220, 300, 0.72).then(function(dataUrl){
+      pendingPhoto = dataUrl;
+      photoPreview.src = dataUrl;
+      photoPreview.classList.add('has-img');
+    }).catch(function(){ /* ignore */ });
+  });
+
+  function resizeImage(file, maxW, maxH, quality){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        var img = new Image();
+        img.onload = function(){
+          var ratio = Math.min(maxW/img.width, maxH/img.height, 1);
+          var w = Math.round(img.width*ratio), hh = Math.round(img.height*ratio);
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = hh;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, hh);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = ev.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('saveBookBtn').addEventListener('click', async function(){
+    var name = fldBookName.value.trim();
+    if (!name){ await showAlert('Lütfen kitap adını gir.'); return; }
+    var level = fldBookLevel.value;
+    var ders = fldBookDers.value;
+    var topicNames = (TOPICS[level] && TOPICS[level][ders]) ? TOPICS[level][ders] : [];
+    var book = {
+      id: uid(),
+      name: name,
+      level: level,
+      ders: ders,
+      photo: pendingPhoto,
+      topics: topicNames.map(function(t){ return { name: t, done: false }; })
+    };
+    books.push(book);
+    saveBooks();
+    renderBooksGrid();
+    renderStats();
+    bookBackdrop.classList.remove('open');
+  });
+
+  /* ================= TABS ================= */
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      document.getElementById('view-program').classList.toggle('active', tab === 'program');
+      document.getElementById('view-books').classList.toggle('active', tab === 'books');
+      document.getElementById('view-stats').classList.toggle('active', tab === 'stats');
+      if (tab === 'stats') renderStatsTab();
+    });
+  });
+
+  /* ================= INIT ================= */
+  loadAll();
+
+})();
 </script>
 </body>
 </html>
