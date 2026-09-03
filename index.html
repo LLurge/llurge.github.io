@@ -205,7 +205,10 @@
       <h1>Planım</h1>
       <p>TYT ve AYT için haftalık çalışma programı, izlediğin videoları ve çözdüğün soruları not al, kitaplarındaki konuları takip et. Her hafta kendi geçmişini saklar.</p>
     </div>
-    <div class="save-status" id="saveStatus"></div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <button class="btn-ghost" id="ghOpenBtn" style="padding:6px 12px; font-size:12px;">☁ GitHub Senkron</button>
+      <div class="save-status" id="saveStatus"></div>
+    </div>
   </header>
 
   <nav class="tabs">
@@ -368,6 +371,29 @@
     <div class="modal-actions">
       <button class="btn-ghost" id="cancelBookBtn">İptal</button>
       <button class="btn-primary" id="saveBookBtn">Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- GITHUB SYNC MODAL -->
+<div class="modal-backdrop" id="ghModalBackdrop">
+  <div class="modal">
+    <h3>GitHub ile Senkronizasyon</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.55; margin:0;">
+      Verilerin cihazlar arasında senkron olması için GitHub hesabında <b>"gist"</b> izinli bir Personal Access Token oluşturup buraya yapıştır. Veriler bir gizli (private) Gist'te tutulur, token sadece bu cihazda saklanır ve istekler doğrudan tarayıcından GitHub'a gider.
+    </p>
+    <a href="https://github.com/settings/tokens/new?description=Planim&scopes=gist" target="_blank" rel="noopener" style="font-size:12px; color:var(--accent); text-decoration:none; font-weight:600;">Token oluşturmak için tıkla →</a>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input type="password" id="ghTokenInput" placeholder="ghp_...">
+    </div>
+    <div id="ghStatusText" style="font-size:12px; color:var(--ink-faint); min-height:16px;"></div>
+    <div class="modal-actions" style="justify-content:space-between;">
+      <button class="btn-del" id="ghDisconnectBtn" style="display:none;">Bağlantıyı Kes</button>
+      <div style="display:flex; gap:8px; margin-left:auto;">
+        <button class="btn-ghost" id="ghCancelBtn">Kapat</button>
+        <button class="btn-primary" id="ghConnectBtn">Bağlan</button>
+      </div>
     </div>
   </div>
 </div>
@@ -587,6 +613,78 @@
   var scheduleTimer = null;
   var booksTimer = null;
   var dragState = null;
+  var ghToken = null;
+  var ghGistId = null;
+  var ghEnabled = false;
+  var ghSyncTimer = null;
+
+  var GH_API = 'https://api.github.com';
+  var GH_DESC = 'planim-tyt-ayt-veri (silme, otomatik eşleştirme için kullanılıyor)';
+  var GH_FILENAME = 'planim-data.json';
+
+  function ghHeaders(token){
+    return {
+      'Authorization': 'token '+token,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    };
+  }
+  async function ghFindOrCreateGist(token, initialPayload){
+    var res = await fetch(GH_API+'/gists?per_page=100', { headers: ghHeaders(token) });
+    if (!res.ok){
+      if (res.status===401) throw new Error('Token geçersiz veya yetkisiz.');
+      throw new Error('Gist listesi alınamadı ('+res.status+').');
+    }
+    var list = await res.json();
+    var found = list.find(function(g){ return g.description === GH_DESC; });
+    if (found) return { id: found.id, isNew:false };
+    var files = {};
+    files[GH_FILENAME] = { content: JSON.stringify(initialPayload, null, 2) };
+    var createRes = await fetch(GH_API+'/gists', {
+      method:'POST',
+      headers: ghHeaders(token),
+      body: JSON.stringify({ description: GH_DESC, public:false, files: files })
+    });
+    if (!createRes.ok) throw new Error('Gist oluşturulamadı ('+createRes.status+').');
+    var created = await createRes.json();
+    return { id: created.id, isNew:true };
+  }
+  async function ghSaveToGist(token, gistId, payload){
+    var files = {};
+    files[GH_FILENAME] = { content: JSON.stringify(payload, null, 2) };
+    var res = await fetch(GH_API+'/gists/'+gistId, {
+      method:'PATCH',
+      headers: ghHeaders(token),
+      body: JSON.stringify({ files: files })
+    });
+    if (!res.ok) throw new Error('Gist güncellenemedi ('+res.status+').');
+    return true;
+  }
+  async function ghLoadFromGist(token, gistId){
+    var res = await fetch(GH_API+'/gists/'+gistId, { headers: ghHeaders(token) });
+    if (!res.ok) throw new Error('Gist okunamadı ('+res.status+').');
+    var data = await res.json();
+    var file = data.files && data.files[GH_FILENAME];
+    if (!file) return null;
+    var content = file.content;
+    if (file.truncated && file.raw_url){
+      var rawRes = await fetch(file.raw_url);
+      content = await rawRes.text();
+    }
+    return JSON.parse(content);
+  }
+  function scheduleGithubSync(){
+    if (!ghEnabled) return;
+    clearTimeout(ghSyncTimer);
+    ghSyncTimer = setTimeout(async function(){
+      try{
+        await ghSaveToGist(ghToken, ghGistId, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+        setStatus('GitHub\'a kaydedildi ✓', true);
+      } catch(e){
+        setStatus('GitHub senkron hatası', true);
+      }
+    }, 1200);
+  }
 
   function uid(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
   function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -610,6 +708,30 @@
 
     var migrated = migrateOldSchedule();
     if (migrated) saveSchedule();
+
+    try{
+      var tk = await window.storage.get('ghToken', false);
+      ghToken = tk && tk.value ? tk.value : null;
+    } catch(e){ ghToken = null; }
+    try{
+      var gid = await window.storage.get('ghGistId', false);
+      ghGistId = gid && gid.value ? gid.value : null;
+    } catch(e){ ghGistId = null; }
+    ghEnabled = !!(ghToken && ghGistId);
+    updateGhOpenBtn();
+
+    if (ghEnabled){
+      try{
+        var remote = await ghLoadFromGist(ghToken, ghGistId);
+        if (remote){
+          schedule = remote.schedule || {};
+          books = remote.books || [];
+          seededWeeks = remote.seededWeeks || [];
+        }
+      } catch(e){
+        setStatus('GitHub\'dan yüklenemedi, yerel veri kullanılıyor', true);
+      }
+    }
 
     await ensureWeekSeeded(currentWeekStart);
 
@@ -668,6 +790,7 @@
         setStatus('Kaydedildi ✓', true);
       } catch(e){ setStatus('Kaydedilemedi', true); }
     }, 550);
+    scheduleGithubSync();
   }
 
   function saveBooks(){
@@ -679,6 +802,7 @@
         setStatus('Kaydedildi ✓', true);
       } catch(e){ setStatus('Kaydedilemedi', true); }
     }, 550);
+    scheduleGithubSync();
   }
 
   /* ================= STATS (chips + tab) ================= */
@@ -1253,6 +1377,71 @@
     renderStats();
     bookBackdrop.classList.remove('open');
   });
+
+  /* ================= GITHUB SYNC MODAL ================= */
+  var ghBackdrop = document.getElementById('ghModalBackdrop');
+  var ghTokenInput = document.getElementById('ghTokenInput');
+  var ghStatusText = document.getElementById('ghStatusText');
+  var ghDisconnectBtn = document.getElementById('ghDisconnectBtn');
+  var ghOpenBtn = document.getElementById('ghOpenBtn');
+
+  function updateGhOpenBtn(){
+    ghOpenBtn.textContent = ghEnabled ? '☁ GitHub: Bağlı' : '☁ GitHub Senkron';
+  }
+
+  ghOpenBtn.addEventListener('click', function(){
+    ghTokenInput.value = '';
+    ghStatusText.textContent = ghEnabled ? ('Bağlı ✓ (gist: '+ghGistId.slice(0,8)+'…)') : 'Henüz bağlı değil.';
+    ghDisconnectBtn.style.display = ghEnabled ? '' : 'none';
+    ghBackdrop.classList.add('open');
+  });
+  document.getElementById('ghCancelBtn').addEventListener('click', function(){ ghBackdrop.classList.remove('open'); });
+  ghBackdrop.addEventListener('click', function(e){ if (e.target === ghBackdrop) ghBackdrop.classList.remove('open'); });
+
+  document.getElementById('ghConnectBtn').addEventListener('click', async function(){
+    var token = ghTokenInput.value.trim();
+    if (!token){ await showAlert('Lütfen bir token gir.'); return; }
+    ghStatusText.textContent = 'Bağlanılıyor…';
+    try{
+      var result = await ghFindOrCreateGist(token, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+      ghToken = token;
+      ghGistId = result.id;
+      ghEnabled = true;
+      await window.storage.set('ghToken', ghToken, false);
+      await window.storage.set('ghGistId', ghGistId, false);
+      if (result.isNew){
+        await ghSaveToGist(ghToken, ghGistId, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+      } else {
+        var remote = await ghLoadFromGist(ghToken, ghGistId);
+        if (remote){
+          schedule = remote.schedule || {};
+          books = remote.books || [];
+          seededWeeks = remote.seededWeeks || [];
+        }
+      }
+      renderProgram();
+      renderBooksGrid();
+      renderStats();
+      ghStatusText.textContent = 'Bağlandı ✓ (gist: '+ghGistId.slice(0,8)+'…)';
+      ghDisconnectBtn.style.display = '';
+      updateGhOpenBtn();
+    } catch(e){
+      ghStatusText.textContent = 'Hata: '+(e.message || 'bağlanılamadı');
+    }
+  });
+
+  ghDisconnectBtn.addEventListener('click', async function(){
+    var ok = await showConfirm('GitHub bağlantısını kesmek istediğine emin misin? Veriler bu cihazda yerel olarak saklanmaya devam edecek.');
+    if (!ok) return;
+    ghToken = null; ghGistId = null; ghEnabled = false;
+    try{ await window.storage.delete('ghToken', false); } catch(e){}
+    try{ await window.storage.delete('ghGistId', false); } catch(e){}
+    ghStatusText.textContent = 'Bağlantı kesildi.';
+    ghDisconnectBtn.style.display = 'none';
+    updateGhOpenBtn();
+  });
+
+  updateGhOpenBtn();
 
   /* ================= TABS ================= */
   document.querySelectorAll('.tab-btn').forEach(function(btn){
