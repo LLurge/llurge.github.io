@@ -388,6 +388,10 @@
       <input type="password" id="ghTokenInput" placeholder="ghp_...">
     </div>
     <div id="ghStatusText" style="font-size:12px; color:var(--ink-faint); min-height:16px;"></div>
+    <div class="modal-actions" style="justify-content:space-between; flex-wrap:wrap;" id="ghManualRow">
+      <button class="btn-ghost" id="ghPushBtn" style="display:none;">Şimdi Yükle (GitHub'a gönder)</button>
+      <button class="btn-ghost" id="ghPullBtn" style="display:none;">Şimdi Çek (GitHub'dan al)</button>
+    </div>
     <div class="modal-actions" style="justify-content:space-between;">
       <button class="btn-del" id="ghDisconnectBtn" style="display:none;">Bağlantıyı Kes</button>
       <div style="display:flex; gap:8px; margin-left:auto;">
@@ -617,6 +621,8 @@
   var ghGistId = null;
   var ghEnabled = false;
   var ghSyncTimer = null;
+  var ghPollTimer = null;
+  var ghLastSyncedContent = null;
 
   var GH_API = 'https://api.github.com';
   var GH_DESC = 'planim-tyt-ayt-veri (silme, otomatik eşleştirme için kullanılıyor)';
@@ -678,12 +684,40 @@
     clearTimeout(ghSyncTimer);
     ghSyncTimer = setTimeout(async function(){
       try{
-        await ghSaveToGist(ghToken, ghGistId, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+        var payload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+        await ghSaveToGist(ghToken, ghGistId, payload);
+        ghLastSyncedContent = JSON.stringify(payload);
         setStatus('GitHub\'a kaydedildi ✓', true);
       } catch(e){
         setStatus('GitHub senkron hatası', true);
       }
     }, 1200);
+  }
+
+  function startGhPolling(){
+    stopGhPolling();
+    if (!ghEnabled) return;
+    ghPollTimer = setInterval(async function(){
+      if (!ghEnabled) return;
+      if (document.querySelector('.modal-backdrop.open')) return;
+      try{
+        var remote = await ghLoadFromGist(ghToken, ghGistId);
+        if (!remote) return;
+        var remoteStr = JSON.stringify(remote);
+        if (remoteStr === ghLastSyncedContent) return;
+        schedule = remote.schedule || {};
+        books = remote.books || [];
+        seededWeeks = remote.seededWeeks || [];
+        ghLastSyncedContent = remoteStr;
+        renderProgram();
+        renderBooksGrid();
+        renderStats();
+        setStatus('Diğer cihazdan güncellendi ✓', true);
+      } catch(e){ /* sessiz geç, bir sonraki taramada tekrar denenir */ }
+    }, 15000);
+  }
+  function stopGhPolling(){
+    if (ghPollTimer){ clearInterval(ghPollTimer); ghPollTimer = null; }
   }
 
   function uid(){ return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8); }
@@ -727,10 +761,12 @@
           schedule = remote.schedule || {};
           books = remote.books || [];
           seededWeeks = remote.seededWeeks || [];
+          ghLastSyncedContent = JSON.stringify(remote);
         }
       } catch(e){
         setStatus('GitHub\'dan yüklenemedi, yerel veri kullanılıyor', true);
       }
+      startGhPolling();
     }
 
     await ensureWeekSeeded(currentWeekStart);
@@ -1384,10 +1420,45 @@
   var ghStatusText = document.getElementById('ghStatusText');
   var ghDisconnectBtn = document.getElementById('ghDisconnectBtn');
   var ghOpenBtn = document.getElementById('ghOpenBtn');
+  var ghPushBtn = document.getElementById('ghPushBtn');
+  var ghPullBtn = document.getElementById('ghPullBtn');
 
   function updateGhOpenBtn(){
     ghOpenBtn.textContent = ghEnabled ? '☁ GitHub: Bağlı' : '☁ GitHub Senkron';
+    ghPushBtn.style.display = ghEnabled ? '' : 'none';
+    ghPullBtn.style.display = ghEnabled ? '' : 'none';
   }
+
+  ghPushBtn.addEventListener('click', async function(){
+    ghStatusText.textContent = 'Gönderiliyor…';
+    try{
+      var pushPayload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+      await ghSaveToGist(ghToken, ghGistId, pushPayload);
+      ghLastSyncedContent = JSON.stringify(pushPayload);
+      ghStatusText.textContent = '✓ Şu anki verin GitHub\'a gönderildi.';
+    } catch(e){
+      ghStatusText.textContent = '✗ Hata: '+(e.message || 'gönderilemedi');
+    }
+  });
+
+  ghPullBtn.addEventListener('click', async function(){
+    ghStatusText.textContent = 'Çekiliyor…';
+    try{
+      var remote = await ghLoadFromGist(ghToken, ghGistId);
+      if (remote){
+        schedule = remote.schedule || {};
+        books = remote.books || [];
+        seededWeeks = remote.seededWeeks || [];
+        ghLastSyncedContent = JSON.stringify(remote);
+        renderProgram();
+        renderBooksGrid();
+        renderStats();
+      }
+      ghStatusText.textContent = '✓ GitHub\'daki en güncel veri alındı.';
+    } catch(e){
+      ghStatusText.textContent = '✗ Hata: '+(e.message || 'çekilemedi');
+    }
+  });
 
   ghOpenBtn.addEventListener('click', function(){
     ghTokenInput.value = '';
@@ -1410,13 +1481,16 @@
       await window.storage.set('ghToken', ghToken, false);
       await window.storage.set('ghGistId', ghGistId, false);
       if (result.isNew){
-        await ghSaveToGist(ghToken, ghGistId, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+        var pushPayload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+        await ghSaveToGist(ghToken, ghGistId, pushPayload);
+        ghLastSyncedContent = JSON.stringify(pushPayload);
       } else {
         var remote = await ghLoadFromGist(ghToken, ghGistId);
         if (remote){
           schedule = remote.schedule || {};
           books = remote.books || [];
           seededWeeks = remote.seededWeeks || [];
+          ghLastSyncedContent = JSON.stringify(remote);
         }
       }
       renderProgram();
@@ -1425,6 +1499,7 @@
       ghStatusText.textContent = 'Bağlandı ✓ (gist: '+ghGistId.slice(0,8)+'…)';
       ghDisconnectBtn.style.display = '';
       updateGhOpenBtn();
+      startGhPolling();
     } catch(e){
       ghStatusText.textContent = 'Hata: '+(e.message || 'bağlanılamadı');
     }
@@ -1434,6 +1509,7 @@
     var ok = await showConfirm('GitHub bağlantısını kesmek istediğine emin misin? Veriler bu cihazda yerel olarak saklanmaya devam edecek.');
     if (!ok) return;
     ghToken = null; ghGistId = null; ghEnabled = false;
+    stopGhPolling();
     try{ await window.storage.delete('ghToken', false); } catch(e){}
     try{ await window.storage.delete('ghGistId', false); } catch(e){}
     ghStatusText.textContent = 'Bağlantı kesildi.';
