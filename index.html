@@ -606,10 +606,85 @@
     return 'rgba('+r+','+g+','+b+','+alpha+')';
   }
 
+  /* ---------- merge helpers: combine two devices' data instead of overwriting ---------- */
+  function mergeTombstones(a, b){
+    var out = {};
+    Object.keys(a||{}).forEach(function(id){ out[id] = a[id]; });
+    Object.keys(b||{}).forEach(function(id){ if (!out[id] || b[id] > out[id]) out[id] = b[id]; });
+    return out;
+  }
+  function mergeBlockArray(localArr, remoteArr, tombstones){
+    var map = {};
+    (localArr||[]).forEach(function(bl){ map[bl.id] = bl; });
+    (remoteArr||[]).forEach(function(bl){
+      var existing = map[bl.id];
+      if (!existing || (bl.updatedAt||0) > (existing.updatedAt||0)) map[bl.id] = bl;
+    });
+    var out = [];
+    Object.keys(map).forEach(function(id){
+      var delAt = tombstones[id];
+      var blk = map[id];
+      if (delAt && delAt >= (blk.updatedAt||0)) return;
+      out.push(blk);
+    });
+    return out;
+  }
+  function mergeSchedules(localSched, remoteSched, tombstones){
+    var keys = {};
+    Object.keys(localSched||{}).forEach(function(k){ keys[k]=true; });
+    Object.keys(remoteSched||{}).forEach(function(k){ keys[k]=true; });
+    var out = {};
+    Object.keys(keys).forEach(function(k){
+      out[k] = mergeBlockArray((localSched||{})[k], (remoteSched||{})[k], tombstones);
+    });
+    return out;
+  }
+  function mergeBookArray(localArr, remoteArr, tombstones){
+    var map = {};
+    (localArr||[]).forEach(function(bk){ map[bk.id] = JSON.parse(JSON.stringify(bk)); });
+    (remoteArr||[]).forEach(function(rb){
+      var existing = map[rb.id];
+      if (!existing){ map[rb.id] = JSON.parse(JSON.stringify(rb)); return; }
+      var topicMap = {};
+      (existing.topics||[]).forEach(function(t){ topicMap[t.name] = t; });
+      (rb.topics||[]).forEach(function(t){
+        if (topicMap[t.name]) topicMap[t.name].done = topicMap[t.name].done || t.done;
+        else topicMap[t.name] = t;
+      });
+      existing.topics = Object.keys(topicMap).map(function(n){ return topicMap[n]; });
+      if ((rb.updatedAt||0) > (existing.updatedAt||0)){
+        existing.name = rb.name; existing.photo = rb.photo; existing.level = rb.level; existing.ders = rb.ders; existing.updatedAt = rb.updatedAt;
+      }
+    });
+    var out = [];
+    Object.keys(map).forEach(function(id){
+      var delAt = tombstones[id];
+      var bk = map[id];
+      if (delAt && delAt >= (bk.updatedAt||0)) return;
+      out.push(bk);
+    });
+    return out;
+  }
+  function applyRemoteMerge(remote){
+    if (!remote) return;
+    blockTombstones = mergeTombstones(blockTombstones, remote.blockTombstones||{});
+    bookTombstones = mergeTombstones(bookTombstones, remote.bookTombstones||{});
+    schedule = mergeSchedules(schedule, remote.schedule||{}, blockTombstones);
+    books = mergeBookArray(books, remote.books||[], bookTombstones);
+    var swSet = {};
+    (seededWeeks||[]).concat(remote.seededWeeks||[]).forEach(function(k){ swSet[k]=true; });
+    seededWeeks = Object.keys(swSet);
+  }
+  function buildSyncPayload(){
+    return { schedule:schedule, books:books, seededWeeks:seededWeeks, blockTombstones:blockTombstones, bookTombstones:bookTombstones };
+  }
+
   /* ================= STATE ================= */
   var schedule = {};
   var books = [];
   var seededWeeks = [];
+  var blockTombstones = {};
+  var bookTombstones = {};
   var currentWeekStart = getMonday(new Date());
   var currentBookId = null;
   var currentDetailId = null;
@@ -684,7 +759,7 @@
     clearTimeout(ghSyncTimer);
     ghSyncTimer = setTimeout(async function(){
       try{
-        var payload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+        var payload = buildSyncPayload();
         await ghSaveToGist(ghToken, ghGistId, payload);
         ghLastSyncedContent = JSON.stringify(payload);
         setStatus('GitHub\'a kaydedildi ✓', true);
@@ -705,14 +780,14 @@
         if (!remote) return;
         var remoteStr = JSON.stringify(remote);
         if (remoteStr === ghLastSyncedContent) return;
-        schedule = remote.schedule || {};
-        books = remote.books || [];
-        seededWeeks = remote.seededWeeks || [];
-        ghLastSyncedContent = remoteStr;
+        applyRemoteMerge(remote);
         renderProgram();
         renderBooksGrid();
         renderStats();
         setStatus('Diğer cihazdan güncellendi ✓', true);
+        var merged = buildSyncPayload();
+        await ghSaveToGist(ghToken, ghGistId, merged);
+        ghLastSyncedContent = JSON.stringify(merged);
       } catch(e){ /* sessiz geç, bir sonraki taramada tekrar denenir */ }
     }, 15000);
   }
@@ -740,6 +815,15 @@
       books = b && b.value ? JSON.parse(b.value) : [];
     } catch(e){ books = []; }
 
+    try{
+      var bt = await window.storage.get('blockTombstones', false);
+      blockTombstones = bt && bt.value ? JSON.parse(bt.value) : {};
+    } catch(e){ blockTombstones = {}; }
+    try{
+      var bkt = await window.storage.get('bookTombstones', false);
+      bookTombstones = bkt && bkt.value ? JSON.parse(bkt.value) : {};
+    } catch(e){ bookTombstones = {}; }
+
     var migrated = migrateOldSchedule();
     if (migrated) saveSchedule();
 
@@ -758,10 +842,10 @@
       try{
         var remote = await ghLoadFromGist(ghToken, ghGistId);
         if (remote){
-          schedule = remote.schedule || {};
-          books = remote.books || [];
-          seededWeeks = remote.seededWeeks || [];
-          ghLastSyncedContent = JSON.stringify(remote);
+          applyRemoteMerge(remote);
+          var mergedInit = buildSyncPayload();
+          ghLastSyncedContent = JSON.stringify(mergedInit);
+          try{ await ghSaveToGist(ghToken, ghGistId, mergedInit); } catch(e2){}
         }
       } catch(e){
         setStatus('GitHub\'dan yüklenemedi, yerel veri kullanılıyor', true);
@@ -800,7 +884,7 @@
       if (!schedule[dk]) schedule[dk] = [];
       var hasSleep = schedule[dk].some(function(b){ return b.ders === 'Uyku'; });
       if (!hasSleep){
-        schedule[dk].push({ id: uid(), start:'00:00', end:'06:30', level:'Diğer', ders:'Uyku', konu:'Uyku', video:'', soru:'' });
+        schedule[dk].push({ id: uid(), start:'00:00', end:'06:30', level:'Diğer', ders:'Uyku', konu:'Uyku', video:'', soru:'', updatedAt: Date.now() });
       }
     });
     seededWeeks.push(key);
@@ -823,6 +907,7 @@
     scheduleTimer = setTimeout(async function(){
       try{
         await window.storage.set('schedule', JSON.stringify(schedule), false);
+        await window.storage.set('blockTombstones', JSON.stringify(blockTombstones), false);
         setStatus('Kaydedildi ✓', true);
       } catch(e){ setStatus('Kaydedilemedi', true); }
     }, 550);
@@ -835,6 +920,7 @@
     booksTimer = setTimeout(async function(){
       try{
         await window.storage.set('books', JSON.stringify(books), false);
+        await window.storage.set('bookTombstones', JSON.stringify(bookTombstones), false);
         setStatus('Kaydedildi ✓', true);
       } catch(e){ setStatus('Kaydedilemedi', true); }
     }, 550);
@@ -1079,6 +1165,7 @@
       var res = findBlock(dragState.id);
       if (res){
         res.block.end = floatToTime(newEndFloat);
+        res.block.updatedAt = Date.now();
         saveSchedule();
       }
     }
@@ -1168,7 +1255,8 @@
       ders: fldDers.value,
       konu: fldKonu.value,
       video: '',
-      soru: ''
+      soru: '',
+      updatedAt: Date.now()
     };
     var key = fldDay.value;
     if (!schedule[key]) schedule[key] = [];
@@ -1207,6 +1295,7 @@
     if (!res) return;
     res.block.video = document.getElementById('bdVideo').value;
     res.block.soru = document.getElementById('bdSoru').value;
+    res.block.updatedAt = Date.now();
     saveSchedule();
     renderProgram();
     renderStats();
@@ -1216,6 +1305,7 @@
   document.getElementById('bdDeleteBtn').addEventListener('click', async function(){
     var ok = await showConfirm('Bu dersi programdan silmek istediğine emin misin?');
     if (!ok) return;
+    blockTombstones[currentDetailId] = Date.now();
     Object.keys(schedule).forEach(function(k){
       schedule[k] = (schedule[k]||[]).filter(function(b){ return b.id !== currentDetailId; });
     });
@@ -1315,6 +1405,7 @@
     document.getElementById('deleteBookBtn').addEventListener('click', async function(){
       var ok = await showConfirm('"'+bk.name+'" kitabını silmek istediğine emin misin?');
       if (ok){
+        bookTombstones[bk.id] = Date.now();
         books = books.filter(function(b){ return b.id !== bk.id; });
         saveBooks();
         backToGrid();
@@ -1325,6 +1416,7 @@
       cb.addEventListener('change', function(){
         var idx = parseInt(cb.getAttribute('data-idx'), 10);
         bk.topics[idx].done = cb.checked;
+        bk.updatedAt = Date.now();
         saveBooks();
         cb.closest('.topic-row').classList.toggle('done', cb.checked);
         var dcount = bk.topics.filter(function(t){return t.done;}).length;
@@ -1405,7 +1497,8 @@
       level: level,
       ders: ders,
       photo: pendingPhoto,
-      topics: topicNames.map(function(t){ return { name: t, done: false }; })
+      topics: topicNames.map(function(t){ return { name: t, done: false }; }),
+      updatedAt: Date.now()
     };
     books.push(book);
     saveBooks();
@@ -1432,7 +1525,7 @@
   ghPushBtn.addEventListener('click', async function(){
     ghStatusText.textContent = 'Gönderiliyor…';
     try{
-      var pushPayload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+      var pushPayload = buildSyncPayload();
       await ghSaveToGist(ghToken, ghGistId, pushPayload);
       ghLastSyncedContent = JSON.stringify(pushPayload);
       ghStatusText.textContent = '✓ Şu anki verin GitHub\'a gönderildi.';
@@ -1446,10 +1539,10 @@
     try{
       var remote = await ghLoadFromGist(ghToken, ghGistId);
       if (remote){
-        schedule = remote.schedule || {};
-        books = remote.books || [];
-        seededWeeks = remote.seededWeeks || [];
-        ghLastSyncedContent = JSON.stringify(remote);
+        applyRemoteMerge(remote);
+        var mergedPull = buildSyncPayload();
+        ghLastSyncedContent = JSON.stringify(mergedPull);
+        await ghSaveToGist(ghToken, ghGistId, mergedPull);
         renderProgram();
         renderBooksGrid();
         renderStats();
@@ -1474,23 +1567,23 @@
     if (!token){ await showAlert('Lütfen bir token gir.'); return; }
     ghStatusText.textContent = 'Bağlanılıyor…';
     try{
-      var result = await ghFindOrCreateGist(token, { schedule:schedule, books:books, seededWeeks:seededWeeks });
+      var result = await ghFindOrCreateGist(token, buildSyncPayload());
       ghToken = token;
       ghGistId = result.id;
       ghEnabled = true;
       await window.storage.set('ghToken', ghToken, false);
       await window.storage.set('ghGistId', ghGistId, false);
       if (result.isNew){
-        var pushPayload = { schedule:schedule, books:books, seededWeeks:seededWeeks };
+        var pushPayload = buildSyncPayload();
         await ghSaveToGist(ghToken, ghGistId, pushPayload);
         ghLastSyncedContent = JSON.stringify(pushPayload);
       } else {
         var remote = await ghLoadFromGist(ghToken, ghGistId);
         if (remote){
-          schedule = remote.schedule || {};
-          books = remote.books || [];
-          seededWeeks = remote.seededWeeks || [];
-          ghLastSyncedContent = JSON.stringify(remote);
+          applyRemoteMerge(remote);
+          var mergedConn = buildSyncPayload();
+          ghLastSyncedContent = JSON.stringify(mergedConn);
+          await ghSaveToGist(ghToken, ghGistId, mergedConn);
         }
       }
       renderProgram();
