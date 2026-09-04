@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Planım — TYT & AYT Çalışma Sistemi</title>
+<title>Planım — TYT & AYT Çalışma Sistemi</title>a
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -380,7 +380,7 @@
   <div class="modal">
     <h3>GitHub ile Senkronizasyon</h3>
     <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.55; margin:0;">
-      Verilerin cihazlar arasında senkron olması için GitHub hesabında <b>"gist"</b> izinli bir Personal Access Token oluşturup buraya yapıştır. Veriler bir gizli (private) Gist'te tutulur, token sadece bu cihazda saklanır ve istekler doğrudan tarayıcından GitHub'a gider.
+      Verilerin cihazlar arasında senkron olması için GitHub hesabında <b>"gist"</b> izinli bir <b>klasik (classic)</b> Personal Access Token oluşturup buraya yapıştır — <u>fine-grained token çalışmaz</u>. Aşağıdaki linke tıkla, "gist" izni zaten seçili gelir. Veriler bir gizli (private) Gist'te tutulur, token sadece bu cihazda saklanır ve istekler doğrudan tarayıcından GitHub'a gider.
     </p>
     <a href="https://github.com/settings/tokens/new?description=Planim&scopes=gist" target="_blank" rel="noopener" style="font-size:12px; color:var(--accent); text-decoration:none; font-weight:600;">Token oluşturmak için tıkla →</a>
     <div class="field">
@@ -388,6 +388,10 @@
       <input type="password" id="ghTokenInput" placeholder="ghp_...">
     </div>
     <div id="ghStatusText" style="font-size:12px; color:var(--ink-faint); min-height:16px;"></div>
+    <div id="ghTokenRevealRow" style="display:none; gap:8px; align-items:center;">
+      <input type="text" id="ghTokenReveal" readonly style="flex:1; font-size:11.5px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--input-bg); color:var(--ink);">
+      <button class="btn-ghost" id="ghCopyTokenBtn" style="white-space:nowrap;">Kopyala</button>
+    </div>
     <div class="modal-actions" style="justify-content:space-between; flex-wrap:wrap;" id="ghManualRow">
       <button class="btn-ghost" id="ghPushBtn" style="display:none;">Şimdi Yükle (GitHub'a gönder)</button>
       <button class="btn-ghost" id="ghPullBtn" style="display:none;">Şimdi Çek (GitHub'dan al)</button>
@@ -665,6 +669,28 @@
     });
     return out;
   }
+  function dedupeSleepBlocks(){
+    var changed = false;
+    Object.keys(schedule).forEach(function(k){
+      var arr = schedule[k] || [];
+      var seen = {};
+      var kept = [];
+      arr.forEach(function(b){
+        if (b.ders === 'Uyku'){
+          var sig = b.start+'-'+b.end;
+          if (seen[sig]){
+            blockTombstones[b.id] = Date.now();
+            changed = true;
+            return;
+          }
+          seen[sig] = true;
+        }
+        kept.push(b);
+      });
+      schedule[k] = kept;
+    });
+    return changed;
+  }
   function applyRemoteMerge(remote){
     if (!remote) return;
     blockTombstones = mergeTombstones(blockTombstones, remote.blockTombstones||{});
@@ -674,6 +700,7 @@
     var swSet = {};
     (seededWeeks||[]).concat(remote.seededWeeks||[]).forEach(function(k){ swSet[k]=true; });
     seededWeeks = Object.keys(swSet);
+    dedupeSleepBlocks();
   }
   function buildSyncPayload(){
     return { schedule:schedule, books:books, seededWeeks:seededWeeks, blockTombstones:blockTombstones, bookTombstones:bookTombstones };
@@ -825,7 +852,8 @@
     } catch(e){ bookTombstones = {}; }
 
     var migrated = migrateOldSchedule();
-    if (migrated) saveSchedule();
+    var deduped = dedupeSleepBlocks();
+    if (migrated || deduped) saveSchedule();
 
     try{
       var tk = await window.storage.get('ghToken', false);
@@ -1522,7 +1550,20 @@
     ghPullBtn.style.display = ghEnabled ? '' : 'none';
   }
 
+  async function refreshGhCreds(){
+    try{
+      var tk = await window.storage.get('ghToken', false);
+      if (tk && tk.value) ghToken = tk.value;
+    } catch(e){}
+    try{
+      var gid = await window.storage.get('ghGistId', false);
+      if (gid && gid.value) ghGistId = gid.value;
+    } catch(e){}
+  }
+
   ghPushBtn.addEventListener('click', async function(){
+    await refreshGhCreds();
+    if (!ghToken || !ghGistId){ ghStatusText.textContent = '✗ Önce bağlanman gerekiyor.'; return; }
     ghStatusText.textContent = 'Gönderiliyor…';
     try{
       var pushPayload = buildSyncPayload();
@@ -1530,11 +1571,14 @@
       ghLastSyncedContent = JSON.stringify(pushPayload);
       ghStatusText.textContent = '✓ Şu anki verin GitHub\'a gönderildi.';
     } catch(e){
-      ghStatusText.textContent = '✗ Hata: '+(e.message || 'gönderilemedi');
+      console.error('GitHub push hatası:', e);
+      ghStatusText.textContent = '✗ Hata: '+describeGhError(e);
     }
   });
 
   ghPullBtn.addEventListener('click', async function(){
+    await refreshGhCreds();
+    if (!ghToken || !ghGistId){ ghStatusText.textContent = '✗ Önce bağlanman gerekiyor.'; return; }
     ghStatusText.textContent = 'Çekiliyor…';
     try{
       var remote = await ghLoadFromGist(ghToken, ghGistId);
@@ -1549,7 +1593,8 @@
       }
       ghStatusText.textContent = '✓ GitHub\'daki en güncel veri alındı.';
     } catch(e){
-      ghStatusText.textContent = '✗ Hata: '+(e.message || 'çekilemedi');
+      console.error('GitHub pull hatası:', e);
+      ghStatusText.textContent = '✗ Hata: '+describeGhError(e);
     }
   });
 
@@ -1557,14 +1602,43 @@
     ghTokenInput.value = '';
     ghStatusText.textContent = ghEnabled ? ('Bağlı ✓ (gist: '+ghGistId.slice(0,8)+'…)') : 'Henüz bağlı değil.';
     ghDisconnectBtn.style.display = ghEnabled ? '' : 'none';
+    var revealRow = document.getElementById('ghTokenRevealRow');
+    if (ghEnabled && ghToken){
+      document.getElementById('ghTokenReveal').value = ghToken;
+      revealRow.style.display = 'flex';
+    } else {
+      revealRow.style.display = 'none';
+    }
     ghBackdrop.classList.add('open');
+  });
+  document.getElementById('ghCopyTokenBtn').addEventListener('click', async function(){
+    var input = document.getElementById('ghTokenReveal');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    try{
+      await navigator.clipboard.writeText(input.value);
+      ghStatusText.textContent = '✓ Token kopyalandı, diğer cihazda yapıştırabilirsin.';
+    } catch(e){
+      ghStatusText.textContent = 'Otomatik kopyalanamadı, üstteki kutudan elle kopyala (seçili durumda).';
+    }
   });
   document.getElementById('ghCancelBtn').addEventListener('click', function(){ ghBackdrop.classList.remove('open'); });
   ghBackdrop.addEventListener('click', function(e){ if (e.target === ghBackdrop) ghBackdrop.classList.remove('open'); });
 
+  function describeGhError(e){
+    if (e instanceof TypeError){
+      return 'Ağ isteği başarısız oldu (internet bağlantısı, CORS ya da tarayıcı engeli olabilir).';
+    }
+    return e.message || 'bilinmeyen hata';
+  }
+
   document.getElementById('ghConnectBtn').addEventListener('click', async function(){
     var token = ghTokenInput.value.trim();
     if (!token){ await showAlert('Lütfen bir token gir.'); return; }
+    if (token.indexOf('github_pat_') === 0){
+      ghStatusText.textContent = '✗ Bu bir "fine-grained" token gibi görünüyor. Gist API sadece KLASİK (classic) token + "gist" izniyle çalışır. Yukarıdaki linkten klasik token oluştur.';
+      return;
+    }
     ghStatusText.textContent = 'Bağlanılıyor…';
     try{
       var result = await ghFindOrCreateGist(token, buildSyncPayload());
@@ -1589,12 +1663,13 @@
       renderProgram();
       renderBooksGrid();
       renderStats();
-      ghStatusText.textContent = 'Bağlandı ✓ (gist: '+ghGistId.slice(0,8)+'…)';
+      ghStatusText.textContent = 'Bağlandı ✓ (gist: '+ghGistId.slice(0,8)+'…) — bulunan/oluşturulan kayıt: '+(result.isNew?'yeni':'mevcut');
       ghDisconnectBtn.style.display = '';
       updateGhOpenBtn();
       startGhPolling();
     } catch(e){
-      ghStatusText.textContent = 'Hata: '+(e.message || 'bağlanılamadı');
+      console.error('GitHub bağlantı hatası:', e);
+      ghStatusText.textContent = '✗ Hata: '+describeGhError(e);
     }
   });
 
@@ -1626,6 +1701,7 @@
   });
 
   /* ================= INIT ================= */
+  console.log('Planım yüklendi — build: 2026-09-04-v3 (defensive gh creds refresh)');
   loadAll();
 
 })();
