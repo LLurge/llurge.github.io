@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Planım — TYT & AYT Çalışma Sistemi</title>a
+<title>Planım — TYT & AYT Çalışma Sistemi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -100,6 +100,7 @@
   .cal-block:hover{filter:brightness(1.2);}
   .cb-time{font-size:10px; font-weight:700; font-family:var(--font-head); color:var(--ink-soft); white-space:nowrap;}
   .cb-konu{font-size:12px; font-weight:600; margin-top:1px; line-height:1.25; color:var(--ink); overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+  .cb-book{font-size:10px; margin-top:1px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
   .cal-resize-handle{position:absolute; left:0; right:0; bottom:0; height:9px; cursor:ns-resize; z-index:4;}
   .cal-resize-handle::after{content:''; position:absolute; left:50%; bottom:2px; width:22px; height:3px; border-radius:2px; background:rgba(255,255,255,0.4); transform:translateX(-50%); opacity:0; transition:opacity .12s;}
@@ -297,6 +298,7 @@
       <select id="fldLevel">
         <option value="TYT">TYT</option>
         <option value="AYT">AYT</option>
+        <option value="Deneme">Deneme</option>
         <option value="Diğer">Diğer</option>
       </select>
     </div>
@@ -324,8 +326,8 @@
       <div id="bdTime" style="font-size:13px; color:var(--ink-soft);"></div>
     </div>
     <div class="field">
-      <label>İzlediğim video</label>
-      <input type="text" id="bdVideo" placeholder="örn. Hocalara Geldik - Paragraf 3">
+      <label>Çözdüğüm Kitap</label>
+      <select id="bdBook"><option value="">— Kitap seçilmedi —</option></select>
     </div>
     <div class="field">
       <label>Soru Sayısı</label>
@@ -523,6 +525,11 @@
       "Felsefe Grubu": ["Felsefe ile Tanışma","Bilgi Felsefesi","Bilim Felsefesi","Varlık Felsefesi","Ahlak Felsefesi","Sanat Felsefesi","Din Felsefesi","Siyaset Felsefesi","Mantık","Psikoloji","Sosyoloji"],
       "Din Kültürü": ["İnanç","İbadet","Gençlik, Kişilik ve Ahlak","Din ve Sosyal Değişim","İslam Düşüncesinde Tasavvufi Yorumlar","Güncel Dini Meseleler","Hint ve Çin Dinleri"]
     },
+    Deneme: {
+      "TYT Denemesi": ["Genel Deneme"],
+      "AYT Denemesi": ["Genel Deneme"],
+      "Branş Denemesi": ["Türkçe","Matematik","Geometri","Tarih","Coğrafya","Felsefe Grubu","Din Kültürü","Fizik","Kimya","Biyoloji","Edebiyat","Tarih-1","Coğrafya-1"]
+    },
     "Diğer": {
       "Uyku": ["Uyku"],
       "Yemek": ["Yemek"],
@@ -532,6 +539,7 @@
   };
 
   var ROW_H = 52;
+  var SLOT_QUARTERS = 4;
   var ABBR_BY_JSDAY = {0:'PAZ',1:'PZT',2:'SAL',3:'ÇAR',4:'PER',5:'CUM',6:'CMT'};
   var FULLDAY_BY_JSDAY = {0:'Pazar',1:'Pazartesi',2:'Salı',3:'Çarşamba',4:'Perşembe',5:'Cuma',6:'Cumartesi'};
   var MONTHS_TR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
@@ -598,8 +606,14 @@
   }
 
   var PALETTE = ["#6C8CFF","#FF7B93","#4FD3D9","#B192FF","#FFC670","#5FE08A","#E8A16B","#7FC0FF","#FF7FC0","#F0D264","#FF9E78","#4FE0C4"];
+  var DERS_COLOR_OVERRIDES = {
+    'Fizik': '#2FD9C4',
+    'Biyoloji': '#3FBF5E',
+    'Matematik': '#3B7DF0'
+  };
   function colorForDers(ders){
     if (ders === 'Uyku') return '#545A68';
+    if (DERS_COLOR_OVERRIDES.hasOwnProperty(ders)) return DERS_COLOR_OVERRIDES[ders];
     var sum = 0;
     for (var i=0;i<ders.length;i++) sum += ders.charCodeAt(i);
     return PALETTE[sum % PALETTE.length];
@@ -1109,8 +1123,15 @@
       var key = dateKey(d);
       var blocks = (schedule[key]||[]);
       var trackInner = '';
+      /* quarter-hour slots so a block can be started from any 15-minute mark, not just the top of the hour */
+      var slotH = ROW_H/SLOT_QUARTERS;
       for (var hh=0; hh<24; hh++){
-        trackInner += '<div class="cal-slot" data-key="'+key+'" data-hour="'+hh+'" style="top:'+(hh*ROW_H)+'px;height:'+ROW_H+'px"></div>';
+        for (var q=0; q<SLOT_QUARTERS; q++){
+          var startMin = hh*60 + q*15;
+          var slotTime = pad2(Math.floor(startMin/60))+':'+pad2(startMin%60);
+          var slotTop = hh*ROW_H + q*slotH;
+          trackInner += '<div class="cal-slot" data-key="'+key+'" data-time="'+slotTime+'" style="top:'+slotTop+'px;height:'+slotH+'px"></div>';
+        }
       }
       blocks.forEach(function(b){
         var sf = timeToFloat(b.start), ef = timeToFloat(b.end);
@@ -1119,6 +1140,7 @@
         trackInner += '<div class="cal-block" data-id="'+b.id+'" style="top:'+top+'px;height:'+height+'px;border-left-color:'+color+';background:'+hexToRgba(color,0.2)+'">'+
           '<div class="cb-time">'+b.start+'–'+b.end+'</div>'+
           '<div class="cb-konu">'+escapeHtml(b.konu)+'</div>'+
+          (b.bookName ? '<div class="cb-book">📘 '+escapeHtml(b.bookName)+'</div>' : '')+
           '<div class="cal-resize-handle" data-id="'+b.id+'"></div>'+
           '</div>';
       });
@@ -1140,7 +1162,7 @@
     if (e.target.closest('.cal-resize-handle')) return;
     var slot = e.target.closest('.cal-slot');
     if (slot){
-      openBlockModal(slot.getAttribute('data-key'), parseInt(slot.getAttribute('data-hour'),10));
+      openBlockModal(slot.getAttribute('data-key'), slot.getAttribute('data-time'));
       return;
     }
     var block = e.target.closest('.cal-block');
@@ -1215,7 +1237,7 @@
   document.getElementById('nextWeekBtn').addEventListener('click', function(){ goToWeek(addDays(currentWeekStart,7)); });
   document.getElementById('todayBtn').addEventListener('click', function(){ goToWeek(getMonday(new Date())); });
 
-  document.getElementById('quickAddBtn').addEventListener('click', function(){ openBlockModal(null, 17); });
+  document.getElementById('quickAddBtn').addEventListener('click', function(){ openBlockModal(null, '17:00'); });
 
   /* ---------- add block modal ---------- */
   var blockBackdrop = document.getElementById('blockModalBackdrop');
@@ -1247,7 +1269,7 @@
     fldEnd.value = TIMES[endIdx];
   });
 
-  function openBlockModal(dateKeyArg, hour){
+  function openBlockModal(dateKeyArg, startTimeArg){
     var wDates = weekDatesFrom(currentWeekStart);
     fldDay.innerHTML = wDates.map(function(d){
       var k = dateKey(d);
@@ -1258,9 +1280,11 @@
 
     fldLevel.value = 'TYT';
     populateDersOptions('TYT', fldDers, fldKonu);
-    if (hour != null){
-      fldStart.value = pad2(hour)+':00';
-      fldEnd.value = pad2(Math.min(hour+1,24))+':00';
+    if (startTimeArg){
+      fldStart.value = startTimeArg;
+      var idx = TIMES.indexOf(startTimeArg);
+      var endIdx = idx === -1 ? TIMES.indexOf('18:00') : Math.min(idx+4, TIMES.length-1);
+      fldEnd.value = TIMES[endIdx];
     } else {
       fldStart.value = '17:00';
       fldEnd.value = '18:00';
@@ -1305,13 +1329,31 @@
     return found ? {block:found, dateKey:foundKey} : null;
   }
 
+  function populateBdBookOptions(block){
+    var sel = document.getElementById('bdBook');
+    if (!books.length){
+      sel.innerHTML = '<option value="">— Henüz kitap eklemedin —</option>';
+      return;
+    }
+    var matching = books.filter(function(bk){ return bk.ders === block.ders && bk.level === block.level; });
+    var rest = books.filter(function(bk){ return !(bk.ders === block.ders && bk.level === block.level); });
+    var html = '<option value="">— Kitap seçilmedi —</option>';
+    function opt(bk){ return '<option value="'+bk.id+'">'+escapeHtml(bk.name)+' ('+bk.level+' · '+escapeHtml(bk.ders)+')</option>'; }
+    matching.forEach(function(bk){ html += opt(bk); });
+    if (matching.length && rest.length) html += '<option disabled>──────────</option>';
+    rest.forEach(function(bk){ html += opt(bk); });
+    sel.innerHTML = html;
+    sel.value = block.bookId || '';
+    if (sel.value !== (block.bookId || '')) sel.value = '';
+  }
+
   function openBlockDetail(id){
     var res = findBlock(id);
     if (!res) return;
     currentDetailId = id;
     document.getElementById('bdTitle').textContent = res.block.konu;
     document.getElementById('bdTime').textContent = formatDateLabel(res.dateKey)+' · '+res.block.start+'–'+res.block.end+' · '+res.block.level+' · '+res.block.ders;
-    document.getElementById('bdVideo').value = res.block.video || '';
+    populateBdBookOptions(res.block);
     document.getElementById('bdSoru').value = (res.block.soru !== undefined && res.block.soru !== null) ? res.block.soru : '';
     detailBackdrop.classList.add('open');
   }
@@ -1321,7 +1363,10 @@
   document.getElementById('bdSaveBtn').addEventListener('click', function(){
     var res = findBlock(currentDetailId);
     if (!res) return;
-    res.block.video = document.getElementById('bdVideo').value;
+    var bookSel = document.getElementById('bdBook');
+    var pickedBook = books.find(function(bk){ return bk.id === bookSel.value; });
+    res.block.bookId = bookSel.value || '';
+    res.block.bookName = pickedBook ? pickedBook.name : '';
     res.block.soru = document.getElementById('bdSoru').value;
     res.block.updatedAt = Date.now();
     saveSchedule();
@@ -1701,7 +1746,7 @@
   });
 
   /* ================= INIT ================= */
-  console.log('Planım yüklendi — build: 2026-09-04-v3 (defensive gh creds refresh)');
+  console.log('Planım yüklendi — build: 2026-09-27-v4 (deneme, mola, 15dk hassasiyet, ders renkleri)');
   loadAll();
 
 })();
